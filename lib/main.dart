@@ -5,6 +5,13 @@ import 'pages/report_page.dart';
 import 'pages/circle_page.dart';
 import 'pages/resources_page.dart';
 import 'pages/sos_fullscreen.dart';
+import 'report/report_home.dart';
+import 'report/mode_amber_confirm.dart';
+import 'report/mode_amber_details.dart';
+import 'report/mode_witness_form.dart';
+import 'report/mode_quick_pin.dart';
+import 'report/witness_success_page.dart';
+import 'constants/app_theme.dart';
 
 void main() {
   runApp(const SafeSightApp());
@@ -27,25 +34,22 @@ class SafeSightApp extends StatelessWidget {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      scaffoldBackgroundColor: const Color(0xFF000000),
+      scaffoldBackgroundColor: AppColors.background,
       colorScheme: const ColorScheme.dark(
-        background: const Color(0xFF000000),
-        surface: const Color(0xFF000000),
-        primary: Color(0xFF39FF14),
-        secondary: Color(0xFF6E6E6E),
-        error: Color(0xFFFF1A1A),
+        surface: AppColors.background,
+        primary: AppColors.neonGreen,
+        secondary: AppColors.inactiveGray,
+        error: AppColors.neonRed,
       ),
-      textTheme: const TextTheme(
-        labelSmall: TextStyle(
-          color: Color(0xFF6E6E6E),
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 1.2,
-        ),
+      textTheme: TextTheme(
+        headlineLarge: AppTextStyles.neonTitle(),
+        titleLarge: AppTextStyles.neonSubtitle(),
+        bodyLarge: AppTextStyles.bodyText(),
+        labelSmall: AppTextStyles.tabLabel(),
       ),
       appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xFF000000),
-        foregroundColor: Color(0xFF39FF14),
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.neonGreen,
         elevation: 0,
       ),
     );
@@ -62,14 +66,18 @@ class MainScaffold extends StatefulWidget {
 class _MainScaffoldState extends State<MainScaffold> {
   int _currentIndex = 0;
 
-
+  // Navigator keys for each tab
+  final GlobalKey<NavigatorState> _mapNavKey = GlobalKey<NavigatorState>();
+  final GlobalKey<NavigatorState> _reportNavKey = GlobalKey<NavigatorState>();
+  final GlobalKey<NavigatorState> _circleNavKey = GlobalKey<NavigatorState>();
+  final GlobalKey<NavigatorState> _resourcesNavKey = GlobalKey<NavigatorState>();
 
   final List<TabInfo> _tabs = [
-    TabInfo('MAP', Icons.map_outlined, Color(0xFF39FF14)),
-    TabInfo('REPORT', Icons.report_outlined, Color(0xFFFF8C1A)),
-    TabInfo('SOS', Icons.emergency, Color(0xFFFF1A1A)), // Won't be used directly
-    TabInfo('CIRCLE', Icons.group_outlined, Color(0xFF27F3E3)),
-    TabInfo('RESOURCES', Icons.library_books_outlined, Color(0xFF39FF14)),
+    const TabInfo('MAP', Icons.map_outlined, AppColors.neonGreen),
+    const TabInfo('REPORT', Icons.report_outlined, AppColors.neonOrange),
+    const TabInfo('SOS', Icons.emergency, AppColors.neonRed), // Won't be used directly
+    const TabInfo('CIRCLE', Icons.group_outlined, AppColors.neonBlue),
+    const TabInfo('RESOURCES', Icons.library_books_outlined, AppColors.neonGreen),
   ];
 
   @override
@@ -78,10 +86,10 @@ class _MainScaffoldState extends State<MainScaffold> {
       body: IndexedStack(
         index: _currentIndex == 2 ? 0 : _currentIndex > 2 ? _currentIndex - 1 : _currentIndex,
         children: [
-          const MapPage(),
-          const ReportPage(),
-          const CirclePage(),
-          const ResourcesPage(),
+          _buildTabNavigator(0, _mapNavKey, const MapPage()),
+          _buildTabNavigator(1, _reportNavKey, const ReportPage()),
+          _buildTabNavigator(3, _circleNavKey, const CirclePage()),
+          _buildTabNavigator(4, _resourcesNavKey, const ResourcesPage()),
         ],
       ),
       floatingActionButton: Container(
@@ -91,12 +99,12 @@ class _MainScaffoldState extends State<MainScaffold> {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFFF1A1A).withValues(alpha: 0.6),
+              color: AppColors.neonRed.withValues(alpha: 0.6),
               blurRadius: 25,
               spreadRadius: 8,
             ),
             BoxShadow(
-              color: const Color(0xFFFF1A1A).withValues(alpha: 0.4),
+              color: AppColors.neonRed.withValues(alpha: 0.4),
               blurRadius: 50,
               spreadRadius: 3,
             ),
@@ -104,7 +112,7 @@ class _MainScaffoldState extends State<MainScaffold> {
         ),
         child: FloatingActionButton(
           onPressed: _onSOSPressed,
-          backgroundColor: const Color(0xFFFF1A1A),
+          backgroundColor: AppColors.neonRed,
           elevation: 0,
           child: const Icon(
             Icons.emergency,
@@ -115,7 +123,7 @@ class _MainScaffoldState extends State<MainScaffold> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: BottomAppBar(
-        color: const Color(0xFF000000),
+        color: AppColors.background,
         height: 110,
         shape: const CircularNotchedRectangle(),
         notchMargin: 10,
@@ -137,10 +145,52 @@ class _MainScaffoldState extends State<MainScaffold> {
     );
   }
 
+  Widget _buildTabNavigator(int tabIndex, GlobalKey<NavigatorState> navKey, Widget homePage) {
+    return Navigator(
+      key: navKey,
+      onGenerateRoute: (RouteSettings settings) {
+        Widget page = homePage;
+        
+        // Report tab routes
+        if (tabIndex == 1) {
+          switch (settings.name) {
+            case '/report':
+              page = const ReportHome();
+              break;
+            case '/report/amber':
+              page = const ModeAmberConfirm();
+              break;
+            case '/report/amber/details':
+              final caseId = settings.arguments as String?;
+              page = ModeAmberDetails(caseId: caseId ?? '');
+              break;
+            case '/report/witness':
+              page = const ModeWitnessForm();
+              break;
+            case '/report/witness/success':
+              final caseId = settings.arguments as String?;
+              page = WitnessSuccessPage(caseId: caseId ?? '');
+              break;
+            case '/report/quick':
+              page = const ModeQuickPin();
+              break;
+            default:
+              page = homePage;
+          }
+        }
+        
+        return MaterialPageRoute(
+          builder: (context) => page,
+          settings: settings,
+        );
+      },
+    );
+  }
+
   Widget _buildNavItem(int index) {
     final tab = _tabs[index];
     final isActive = _currentIndex == index;
-    final color = isActive ? tab.activeColor : const Color(0xFF6E6E6E);
+    final color = isActive ? tab.activeColor : AppColors.inactiveGray;
 
     return Expanded(
       child: GestureDetector(
@@ -169,7 +219,7 @@ class TabInfo {
   final IconData icon;
   final Color activeColor;
 
-  TabInfo(this.label, this.icon, this.activeColor);
+  const TabInfo(this.label, this.icon, this.activeColor);
 }
 
 class NeonIconLabel extends StatelessWidget {
@@ -189,9 +239,9 @@ class NeonIconLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 70, // Increased from 64 to 70
+      height: 70,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 4), // Reduced from 6 to 4
+        padding: const EdgeInsets.symmetric(vertical: 4),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
@@ -218,20 +268,7 @@ class NeonIconLabel extends StatelessWidget {
             FittedBox(
               child: Text(
                 label.toUpperCase(),
-                style: TextStyle(
-                  color: color,
-                  fontSize: 9,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.8,
-                  shadows: isActive
-                      ? [
-                          Shadow(
-                            color: color.withValues(alpha: 0.5),
-                            blurRadius: 4,
-                          ),
-                        ]
-                      : null,
-                ),
+                style: AppTextStyles.tabLabel(color: color),
               ),
             ),
           ],
