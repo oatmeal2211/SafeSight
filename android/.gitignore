@@ -1,0 +1,50 @@
+gradle-wrapper.jar
+/.gradle
+/captures/
+/gradlew
+/gradlew.bat
+/local.properties
+GeneratedPluginRegistrant.java
+.cxx/
+
+# Remember to never publicly share your keystore.
+# See https://flutter.dev/to/reference-keystore
+key.properties
+**/*.keystore
+**/*.jks
+
+# --- OS / IDE ---
+.DS_Store
+.idea/
+.vscode/
+*.iml
+
+# --- Flutter / Dart ---
+.dart_tool/
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
+**/doc/api/
+
+# Keep pubspec.lock for APPS (ignore it only for reusable libraries/packages)
+
+# --- Build artifacts ---
+build/
+**/build/
+
+# --- Android / Gradle ---
+android/.gradle/
+android/captures/
+android/local.properties
+# never commit signing stuff
+android/key.properties
+android/app/*.keystore
+android/app/*.jks
+
+# --- Windows / Linux (if present) ---
+windows/flutter/ephemeral/
+linux/flutter/ephemeral/
+
+# --- Optional: env/secrets ---
+*.env
+.env*
