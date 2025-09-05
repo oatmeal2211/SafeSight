@@ -136,7 +136,7 @@ class _ModeWitnessFormState extends State<ModeWitnessForm> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: AppColors.neonRed,
+                          color: AppColors.neonAmber,
                           width: 1,
                         ),
                       ),
@@ -144,7 +144,7 @@ class _ModeWitnessFormState extends State<ModeWitnessForm> {
                         onPressed: () => Navigator.pop(context),
                         icon: const Icon(
                           Icons.chevron_left,
-                          color: AppColors.neonRed,
+                          color: AppColors.neonAmber,
                           size: 24,
                         ),
                       ),
@@ -153,12 +153,41 @@ class _ModeWitnessFormState extends State<ModeWitnessForm> {
                     Expanded(
                       child: Text(
                         'SERIOUS INCIDENT REPORT',
-                        style: AppTextStyles.neonTitle(color: AppColors.neonRed).copyWith(
+                        style: AppTextStyles.neonTitle(color: AppColors.neonAmber).copyWith(
                           fontSize: 20,
                         ),
                       ),
                     ),
                   ],
+                ),
+              ),
+
+              // Location info
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: AppColors.neonAmber.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.videocam,
+                        color: AppColors.neonAmber.withValues(alpha: 0.6),
+                        size: 16,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Near Library • 40.7306° N, 73.9352° W',
+                        style: AppTextStyles.cctvText(color: AppColors.neonAmber),
+                      ),
+                    ],
+                  ),
                 ),
               ),
 
@@ -172,7 +201,7 @@ class _ModeWitnessFormState extends State<ModeWitnessForm> {
                       NeonDropdown<IncidentCategory>(
                         label: 'Category *',
                         value: _selectedCategory,
-                        color: AppColors.neonRed,
+                        color: AppColors.neonAmber,
                         items: IncidentCategory.values,
                         itemToString: (category) => category.displayName,
                         onChanged: (value) {
@@ -190,7 +219,7 @@ class _ModeWitnessFormState extends State<ModeWitnessForm> {
                         hint: 'Add details (clothing, vehicle plate, direction, etc.)',
                         controller: _descriptionController,
                         maxLines: 4,
-                        color: AppColors.neonRed,
+                        color: AppColors.neonAmber,
                       ),
 
                       const SizedBox(height: 24),
@@ -207,7 +236,7 @@ class _ModeWitnessFormState extends State<ModeWitnessForm> {
                       // Privacy mode
                       Text(
                         'Privacy Mode',
-                        style: AppTextStyles.bodyText(color: AppColors.neonRed),
+                        style: AppTextStyles.bodyText(color: AppColors.neonAmber),
                       ),
                       const SizedBox(height: 8),
                       NeonSegmented<PrivacyMode>(
@@ -218,7 +247,7 @@ class _ModeWitnessFormState extends State<ModeWitnessForm> {
                             case PrivacyMode.anonymous:
                               return 'Anonymous';
                             case PrivacyMode.pseudonymous:
-                              return 'Pseudonymous';
+                              return 'Pseudo';
                             case PrivacyMode.identified:
                               return 'Identified';
                           }
@@ -228,7 +257,7 @@ class _ModeWitnessFormState extends State<ModeWitnessForm> {
                             _privacyMode = value;
                           });
                         },
-                        color: AppColors.neonRed,
+                        color: AppColors.neonAmber,
                       ),
 
                       const SizedBox(height: 40),
@@ -238,7 +267,7 @@ class _ModeWitnessFormState extends State<ModeWitnessForm> {
                         width: double.infinity,
                         child: NeonButton(
                           text: _isSubmitting ? 'Submitting...' : 'Submit Report',
-                          color: AppColors.neonRed,
+                          color: AppColors.neonAmber,
                           filled: true,
                           onPressed: _isSubmitting ? null : _submitReport,
                         ),

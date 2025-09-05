@@ -72,14 +72,14 @@ class _CirclePageState extends State<CirclePage> {
       description: 'Broken lamp in parking lot',
       time: '4 hours ago',
       location: 'Lot B',
-      statusColor: AppColors.neonBlue,
+      statusColor: AppColors.neonGreen,
     ),
     ReportSummary(
       type: 'Witness Report',
       description: 'Incident witnessed',
       time: '1 day ago',
       location: 'Student Center',
-      statusColor: AppColors.neonRed,
+      statusColor: AppColors.neonAmber,
     ),
   ];
 
