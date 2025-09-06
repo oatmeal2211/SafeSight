@@ -179,7 +179,7 @@ class _MapPageState extends State<MapPage> {
             ),
           ),
           Positioned(
-            right: 32.0,
+            left: 32.0,
             bottom: 32.0,
             child: Column(
               mainAxisSize: MainAxisSize.min,
