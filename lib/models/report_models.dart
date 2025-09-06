@@ -162,4 +162,48 @@ class ReportCase {
       quickReportCategory: quickReportCategory ?? this.quickReportCategory,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'type': type.toString(),
+    'timestamp': timestamp.toIso8601String(),
+    'location': location,
+    'note': note,
+    'mediaFiles': mediaFiles,
+    'privacy': privacy?.toString(),
+    'incidentCategory': incidentCategory?.toString(),
+    'quickReportCategory': quickReportCategory?.toString(),
+  };
+
+  factory ReportCase.fromJson(Map<String, dynamic> json) => ReportCase(
+    id: json['id'],
+    type: ReportType.values.firstWhere(
+      (e) => e.toString() == json['type'],
+      orElse: () => ReportType.quickPin,
+    ),
+    timestamp: DateTime.parse(json['timestamp']),
+    location: Map<String, dynamic>.from(json['location']),
+    note: json['note'],
+    mediaFiles: json['mediaFiles'] != null 
+      ? List<String>.from(json['mediaFiles'])
+      : null,
+    privacy: json['privacy'] != null 
+      ? PrivacyMode.values.firstWhere(
+          (e) => e.toString() == json['privacy'],
+          orElse: () => PrivacyMode.anonymous,
+        )
+      : null,
+    incidentCategory: json['incidentCategory'] != null
+      ? IncidentCategory.values.firstWhere(
+          (e) => e.toString() == json['incidentCategory'],
+          orElse: () => IncidentCategory.other,
+        )
+      : null,
+    quickReportCategory: json['quickReportCategory'] != null
+      ? QuickReportCategory.values.firstWhere(
+          (e) => e.toString() == json['quickReportCategory'],
+          orElse: () => QuickReportCategory.other,
+        )
+      : null,
+  );
 }

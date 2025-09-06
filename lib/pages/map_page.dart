@@ -50,7 +50,7 @@ class _MapPageState extends State<MapPage> {
   }
 
   Future<void> _loadReports() async {
-    final reports = CaseService.getAllCases();
+    final reports = await CaseService.getAllCases();
     if (mounted) {
       setState(() {
         _markers = reports.map((report) {
@@ -105,7 +105,6 @@ class _MapPageState extends State<MapPage> {
   void _adjustCameraForDetail(ReportCase report) async {
     if (_mapController == null) return;
 
-    final location = report.location;
     // Calculate window size percentages
     final windowWidthPercent = _isHorizontalOrientation ? 0.3 : 1.0;  // 30% in landscape
     final windowHeightPercent = _isHorizontalOrientation ? 0.85 : 0.35; // 85% in landscape, 35% in portrait
