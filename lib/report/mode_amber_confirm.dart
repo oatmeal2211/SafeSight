@@ -7,7 +7,9 @@ import '../services/case_service.dart';
 import 'shared_widgets.dart';
 
 class ModeAmberConfirm extends StatelessWidget {
-  const ModeAmberConfirm({Key? key}) : super(key: key);
+  final String caseId;
+
+  const ModeAmberConfirm({super.key, required this.caseId});
 
   Future<void> _sendAmberAlert(BuildContext context) async {
     // Haptic feedback and vibration
@@ -101,7 +103,7 @@ class ModeAmberConfirm extends StatelessWidget {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     border: Border.all(
-                      color: AppColors.neonRed.withValues(alpha: 0.3),
+                      color: AppColors.neonRed.withOpacity(0.3),
                       width: 1,
                     ),
                     borderRadius: BorderRadius.circular(8),
@@ -110,7 +112,7 @@ class ModeAmberConfirm extends StatelessWidget {
                     children: [
                       Icon(
                         Icons.videocam,
-                        color: AppColors.neonRed.withValues(alpha: 0.6),
+                        color: AppColors.neonRed.withOpacity(0.6),
                         size: 16,
                       ),
                       const SizedBox(width: 8),
@@ -141,11 +143,11 @@ class ModeAmberConfirm extends StatelessWidget {
                       ),
                       const SizedBox(height: 32),
                       Text(
-                        'This will notify security &\nnearby students.',
-                        textAlign: TextAlign.center,
+                        'This action is irreversible and will immediately notify campus security.',
                         style: AppTextStyles.bodyText(
-                          color: AppColors.white.withValues(alpha: 0.8),
-                        ).copyWith(fontSize: 18),
+                          color: AppColors.white.withOpacity(0.8),
+                        ).copyWith(fontSize: 16),
+                        textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 80),
                       SizedBox(

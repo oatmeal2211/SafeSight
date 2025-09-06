@@ -8,7 +8,7 @@ import '../services/case_service.dart';
 import 'shared_widgets.dart';
 
 class ModeWitnessForm extends StatefulWidget {
-  const ModeWitnessForm({Key? key}) : super(key: key);
+  const ModeWitnessForm({super.key});
 
   @override
   State<ModeWitnessForm> createState() => _ModeWitnessFormState();
@@ -20,7 +20,7 @@ class _ModeWitnessFormState extends State<ModeWitnessForm> {
   
   IncidentCategory? _selectedCategory;
   PrivacyMode _privacyMode = PrivacyMode.anonymous;
-  List<String> _mediaFiles = [];
+  final List<String> _mediaFiles = [];
   bool _isSubmitting = false;
 
   Future<void> _pickPhoto() async {
@@ -169,7 +169,7 @@ class _ModeWitnessFormState extends State<ModeWitnessForm> {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     border: Border.all(
-                      color: AppColors.neonAmber.withValues(alpha: 0.3),
+                      color: AppColors.neonAmber.withOpacity(0.3),
                       width: 1,
                     ),
                     borderRadius: BorderRadius.circular(8),
@@ -178,7 +178,7 @@ class _ModeWitnessFormState extends State<ModeWitnessForm> {
                     children: [
                       Icon(
                         Icons.videocam,
-                        color: AppColors.neonAmber.withValues(alpha: 0.6),
+                        color: AppColors.neonAmber.withOpacity(0.6),
                         size: 16,
                       ),
                       const SizedBox(width: 8),
