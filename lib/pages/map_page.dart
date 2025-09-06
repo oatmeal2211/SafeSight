@@ -18,7 +18,7 @@ class MapPage extends StatefulWidget {
 class _MapPageState extends State<MapPage> {
   GoogleMapController? _mapController;
   Position? _currentPosition;
-  static const double _defaultZoom = 15.0;
+  static const double _defaultZoom = 19.0;
   Set<Marker> _markers = {};
   Timer? _reportUpdateTimer;
 
