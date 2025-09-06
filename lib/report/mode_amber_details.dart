@@ -10,7 +10,7 @@ import 'shared_widgets.dart';
 class ModeAmberDetails extends StatefulWidget {
   final String caseId;
 
-  const ModeAmberDetails({Key? key, required this.caseId}) : super(key: key);
+  const ModeAmberDetails({super.key, required this.caseId});
 
   @override
   State<ModeAmberDetails> createState() => _ModeAmberDetailsState();
@@ -183,7 +183,7 @@ class _ModeAmberDetailsState extends State<ModeAmberDetails> {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     border: Border.all(
-                      color: AppColors.neonRed.withValues(alpha: 0.3),
+                      color: AppColors.neonRed.withOpacity(0.3),
                       width: 1,
                     ),
                     borderRadius: BorderRadius.circular(8),
@@ -192,7 +192,7 @@ class _ModeAmberDetailsState extends State<ModeAmberDetails> {
                     children: [
                       Icon(
                         Icons.videocam,
-                        color: AppColors.neonRed.withValues(alpha: 0.6),
+                        color: AppColors.neonRed.withOpacity(0.6),
                         size: 16,
                       ),
                       const SizedBox(width: 8),
@@ -219,10 +219,10 @@ class _ModeAmberDetailsState extends State<ModeAmberDetails> {
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: AppColors.neonRed.withValues(alpha: 0.3),
+                            color: AppColors.neonRed.withOpacity(0.3),
                             width: 1,
                           ),
-                          color: AppColors.neonRed.withValues(alpha: 0.05),
+                          color: AppColors.neonRed.withOpacity(0.05),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

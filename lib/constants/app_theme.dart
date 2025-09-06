@@ -38,7 +38,7 @@ class AppTextStyles {
   );
 
   static TextStyle cctvText({Color color = AppColors.neonGreen}) => TextStyle(
-    color: color.withValues(alpha: 0.6),
+    color: color.withOpacity(0.8),
     fontSize: 12,
     fontWeight: FontWeight.w500,
     letterSpacing: 0.5,
@@ -56,19 +56,19 @@ class AppTextStyles {
     fontSize: 13,
     fontWeight: FontWeight.bold,
     letterSpacing: 1.2,
-    shadows: color == AppColors.inactiveGray ? null : neonGlow(color, blur: 8),
+    shadows: color == AppColors.inactiveGray ? null : neonGlow(color),
   );
 }
 
 // Helper function to create neon glow effect
-List<Shadow> neonGlow(Color color, {double blur = 14.0}) {
+List<Shadow> neonGlow(Color color, {double blur = 20}) {
   return [
     Shadow(
-      color: color.withValues(alpha: 0.8),
+      color: color.withOpacity(0.8),
       blurRadius: blur,
     ),
     Shadow(
-      color: color.withValues(alpha: 0.4),
+      color: color.withOpacity(0.4),
       blurRadius: blur * 2,
     ),
   ];
@@ -93,7 +93,7 @@ class CctvHeader extends StatelessWidget {
         children: [
           Icon(
             Icons.videocam,
-            color: AppColors.neonGreen.withValues(alpha: 0.6),
+            color: AppColors.neonGreen.withOpacity(0.6),
             size: 16,
           ),
           const SizedBox(width: 8),
@@ -115,32 +115,28 @@ class ScanlineBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        image: DecorationImage(
-          image: const AssetImage('assets/scanlines.png'),
-          repeat: ImageRepeat.repeat,
-          opacity: 0.06,
-          onError: (exception, stackTrace) {
-            // Fallback to simple gradient if image not found
-          },
-        ),
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              AppColors.background,
-              AppColors.background.withValues(alpha: 0.95),
-              AppColors.background,
-            ],
+    return Stack(
+      children: [
+        child,
+        Positioned.fill(
+          child: IgnorePointer(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.background.withOpacity(0.0),
+                    AppColors.background.withOpacity(0.4),
+                    AppColors.background.withOpacity(0.0),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: const [0.0, 0.5, 1.0],
+                ),
+              ),
+            ),
           ),
         ),
-        child: child,
-      ),
+      ],
     );
   }
 }

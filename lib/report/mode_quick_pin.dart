@@ -7,7 +7,7 @@ import '../services/case_service.dart';
 import 'shared_widgets.dart';
 
 class ModeQuickPin extends StatefulWidget {
-  const ModeQuickPin({Key? key}) : super(key: key);
+  const ModeQuickPin({super.key});
 
   @override
   State<ModeQuickPin> createState() => _ModeQuickPinState();
@@ -118,16 +118,16 @@ class _ModeQuickPinState extends State<ModeQuickPin> {
 
   IconData _getCategoryIcon(QuickReportCategory category) {
     switch (category) {
-      case QuickReportCategory.brokenLamp:
+      case QuickReportCategory.hazard:
+        return Icons.warning_amber_rounded;
+      case QuickReportCategory.brokenLight:
         return Icons.lightbulb_outline;
-      case QuickReportCategory.darkCorridor:
-        return Icons.visibility_off;
-      case QuickReportCategory.creepyPerson:
-        return Icons.person_outline;
-      case QuickReportCategory.noise:
-        return Icons.volume_up;
+      case QuickReportCategory.suspiciousVehicle:
+        return Icons.directions_car_filled_outlined;
+      case QuickReportCategory.unsafeArea:
+        return Icons.location_off_outlined;
       case QuickReportCategory.other:
-        return Icons.more_horiz;
+        return Icons.help_outline;
     }
   }
 
@@ -181,7 +181,7 @@ class _ModeQuickPinState extends State<ModeQuickPin> {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     border: Border.all(
-                      color: AppColors.neonGreen.withValues(alpha: 0.3),
+                      color: AppColors.neonGreen.withOpacity(0.3),
                       width: 1,
                     ),
                     borderRadius: BorderRadius.circular(8),
@@ -190,7 +190,7 @@ class _ModeQuickPinState extends State<ModeQuickPin> {
                     children: [
                       Icon(
                         Icons.videocam,
-                        color: AppColors.neonGreen.withValues(alpha: 0.6),
+                        color: AppColors.neonGreen.withOpacity(0.6),
                         size: 16,
                       ),
                       const SizedBox(width: 8),

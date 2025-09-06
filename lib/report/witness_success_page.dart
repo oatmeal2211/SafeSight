@@ -5,7 +5,7 @@ import 'shared_widgets.dart';
 class WitnessSuccessPage extends StatelessWidget {
   final String caseId;
 
-  const WitnessSuccessPage({Key? key, required this.caseId}) : super(key: key);
+  const WitnessSuccessPage({super.key, required this.caseId});
 
   @override
   Widget build(BuildContext context) {
