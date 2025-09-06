@@ -32,9 +32,11 @@ class _ModeAmberDetailsState extends State<ModeAmberDetails> {
 
   Future<void> _loadLocationData() async {
     final data = await LocationService.getLocationData();
-    setState(() {
-      _locationData = data;
-    });
+    if (mounted) {
+      setState(() {
+        _locationData = data;
+      });
+    }
   }
 
   Future<void> _pickPhoto() async {
