@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:async' show Timer;
 import '../constants/app_theme.dart';
 import '../models/report_models.dart';
 import '../services/case_service.dart';
@@ -48,10 +49,13 @@ class CirclePage extends StatefulWidget {
 }
 
 class _CirclePageState extends State<CirclePage> {
+  Timer? _reportsUpdateTimer;
+  bool _isLoading = false;
+
   @override
   void initState() {
     super.initState();
-    _loadRecentReports();
+    _startReportsUpdates();
   }
 
   @override
@@ -60,12 +64,45 @@ class _CirclePageState extends State<CirclePage> {
     _loadRecentReports();
   }
 
+  @override
+  void dispose() {
+    _reportsUpdateTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startReportsUpdates() {
+    // Initial load
+    _loadRecentReports();
+    
+    // Set up periodic updates every 30 seconds
+    _reportsUpdateTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => _loadRecentReports(),
+    );
+  }
+
   Future<void> _loadRecentReports() async {
-    final reports = await CaseService.getRecentCases(days: 7);
-    if (mounted) {
-      setState(() {
-        _recentReports = reports;
-      });
+    // Don't start another load if one is in progress
+    if (_isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final reports = await CaseService.getRecentCases(days: 7);
+      if (mounted) {
+        setState(() {
+          _recentReports = reports;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
   // Sample data for the prototype
@@ -324,31 +361,61 @@ class _CirclePageState extends State<CirclePage> {
               'Recent Reports',
               style: AppTextStyles.neonSubtitle(color: AppColors.neonBlue),
             ),
-            IconButton(
-              onPressed: () {
-                HapticFeedback.mediumImpact();
-                _loadRecentReports();
-              },
-              icon: Icon(
-                Icons.refresh,
-                color: AppColors.neonBlue,
-                size: 20,
-              ),
-              splashRadius: 20,
-            ),
+            _isLoading
+              ? SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.neonBlue),
+                  ),
+                )
+              : IconButton(
+                  onPressed: () {
+                    HapticFeedback.mediumImpact();
+                    _loadRecentReports();
+                  },
+                  icon: Icon(
+                    Icons.refresh,
+                    color: AppColors.neonBlue,
+                    size: 20,
+                  ),
+                  splashRadius: 20,
+                ),
           ],
         ),
         const SizedBox(height: 12),
         Container(
           constraints: const BoxConstraints(maxHeight: 200),
-          child: _recentReports.isEmpty
+          child: _isLoading
             ? Center(
-                child: Text(
-                  'No recent reports',
-                  style: AppTextStyles.cctvText(color: AppColors.inactiveGray),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.neonBlue),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Loading reports...',
+                      style: AppTextStyles.cctvText(color: AppColors.neonBlue),
+                    ),
+                  ],
                 ),
               )
-            : ListView.builder(
+            : _recentReports.isEmpty
+              ? Center(
+                  child: Text(
+                    'No recent reports',
+                    style: AppTextStyles.cctvText(color: AppColors.inactiveGray),
+                  ),
+                )
+              : ListView.builder(
                 shrinkWrap: true,
                 itemCount: _recentReports.length,
                 itemBuilder: (context, index) {
