@@ -371,30 +371,84 @@ class _MapPageState extends State<MapPage> {
 
   // Create custom SOS marker
   Future<BitmapDescriptor> _createSOSMarker() async {
-    const double markerSize = 64.0;
+    const double markerSize = 192.0; // Extra large size to be much bigger than default markers
     final ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
     final Canvas canvas = Canvas(pictureRecorder);
     
-    // Draw the red circle
-    final Paint circlePaint = Paint()
-      ..color = const Color(0xFFFF1A1A)
+    // Draw outer glow
+    final Paint glowPaint = Paint()
+      ..color = const Color(0xFFFF1A1A).withOpacity(0.3)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 15.0)
       ..style = PaintingStyle.fill;
     
     canvas.drawCircle(
       const Offset(markerSize / 2, markerSize / 2),
       markerSize / 2,
-      circlePaint,
+      glowPaint,
+    );
+
+    // Draw main red circle with gradient
+    final Rect rect = Rect.fromCircle(
+      center: Offset(markerSize / 2, markerSize / 2),
+      radius: markerSize / 2 - 8,
     );
     
-    // Draw the white "SOS" text
+    final Paint circlePaint = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          const Color(0xFFFF0000),
+          const Color(0xFFFF1A1A),
+          const Color(0xFFFF4D4D),
+        ],
+        stops: const [0.0, 0.5, 1.0],
+      ).createShader(rect)
+      ..style = PaintingStyle.fill;
+    
+    canvas.drawCircle(
+      const Offset(markerSize / 2, markerSize / 2),
+      markerSize / 2 - 8,
+      circlePaint,
+    );
+
+    // Draw inner white circle
+    final Paint innerCirclePaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+    
+    canvas.drawCircle(
+      const Offset(markerSize / 2, markerSize / 2),
+      markerSize / 2 - 24,
+      innerCirclePaint,
+    );
+
+    // Draw red border for inner circle
+    final Paint borderPaint = Paint()
+      ..color = const Color(0xFFFF1A1A)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4.0;
+    
+    canvas.drawCircle(
+      const Offset(markerSize / 2, markerSize / 2),
+      markerSize / 2 - 24,
+      borderPaint,
+    );
+
+    // Draw the "SOS" text with shadow
     final textPainter = TextPainter(
-      text: const TextSpan(
+      text: TextSpan(
         text: 'SOS',
         style: TextStyle(
-          color: Colors.white,
-          fontSize: 16,
+          color: const Color(0xFFFF0000),
+          fontSize: 48,
           fontWeight: FontWeight.bold,
-          letterSpacing: 1.0,
+          letterSpacing: 2.0,
+          shadows: [
+            Shadow(
+              offset: const Offset(2.0, 2.0),
+              blurRadius: 4.0,
+              color: Colors.black.withOpacity(0.3),
+            ),
+          ],
         ),
       ),
       textDirection: ui.TextDirection.ltr,
