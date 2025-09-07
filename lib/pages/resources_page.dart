@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'safe_word_config_page.dart';
 
 class ResourcesPage extends StatelessWidget {
   const ResourcesPage({super.key});
@@ -51,8 +52,13 @@ class ResourcesPage extends StatelessWidget {
             _buildResourceItem(
               context,
               'Safe Word',
-              Icons.key,
-              () => _showPlaceholderDialog(context, 'Set Safe Word'),
+              Icons.record_voice_over,
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SafeWordConfigPage(),
+                ),
+              ),
             ),
             _buildDivider(),
             _buildToggleItem(context, 'Privacy', Icons.privacy_tip),

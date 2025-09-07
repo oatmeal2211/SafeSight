@@ -5,6 +5,7 @@ import '../constants/app_theme.dart' show AppColors, AppTextStyles, neonGlow, Sc
 import '../models/report_models.dart';
 import '../services/case_service.dart';
 import 'shared_widgets.dart';
+import 'location_info.dart';
 
 class ModeQuickPin extends StatefulWidget {
   const ModeQuickPin({super.key});
@@ -175,33 +176,7 @@ class _ModeQuickPinState extends State<ModeQuickPin> {
               ),
 
               // Location info
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: AppColors.neonGreen.withOpacity(0.3),
-                      width: 1,
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.videocam,
-                        color: AppColors.neonGreen.withOpacity(0.6),
-                        size: 16,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Near Library • 40.7306° N, 73.9352° W',
-                        style: AppTextStyles.cctvText(color: AppColors.neonGreen),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              LocationInfo(color: AppColors.neonGreen),
 
               const SizedBox(height: 32),
 
