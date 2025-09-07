@@ -4,7 +4,8 @@ import '../constants/app_theme.dart';
 enum ReportType {
   amber,
   witness,
-  quickPin
+  quickPin,
+  sos
 }
 
 class Report {
@@ -32,6 +33,8 @@ class Report {
         return AppColors.neonAmber;
       case ReportType.quickPin:
         return AppColors.neonGreen;
+      case ReportType.sos:
+        return AppColors.neonRed;
     }
   }
 

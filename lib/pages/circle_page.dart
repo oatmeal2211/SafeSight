@@ -437,6 +437,8 @@ class _CirclePageState extends State<CirclePage> {
           return Icons.push_pin;
         case ReportType.witness:
           return Icons.visibility;
+        case ReportType.sos:
+          return Icons.sos;
       }
     }
 
@@ -448,6 +450,8 @@ class _CirclePageState extends State<CirclePage> {
           return AppColors.neonAmber;
         case ReportType.quickPin:
           return AppColors.neonGreen;
+        case ReportType.sos:
+          return AppColors.neonRed;
       }
     }
 
@@ -459,6 +463,8 @@ class _CirclePageState extends State<CirclePage> {
           return 'Witness Report';
         case ReportType.quickPin:
           return 'Quick Pin';
+        case ReportType.sos:
+          return 'Emergency SOS';
       }
     }
 

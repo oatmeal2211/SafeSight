@@ -6,9 +6,13 @@ import 'dart:async';
 import '../models/report_models.dart';
 import '../models/media_file.dart';
 import '../services/case_service.dart';
+import '../services/notifications.dart';
 import '../constants/app_theme.dart';
 import '../widgets/media_preview.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
+import 'dart:ui' as ui;
+import 'dart:typed_data';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -24,6 +28,7 @@ class _MapPageState extends State<MapPage> {
   Position? _currentPosition;
   static const double _defaultZoom = 19.0;
   Set<Marker> _markers = {};
+  List<ReportCase> _sosReports = [];
   Timer? _reportUpdateTimer;
   final GlobalKey<_ReportDetailWindowState> _detailWindowKey = GlobalKey<_ReportDetailWindowState>();
 
@@ -55,20 +60,47 @@ class _MapPageState extends State<MapPage> {
     final reports = await CaseService.getAllCases();
     if (mounted) {
       setState(() {
-        _markers = reports.map((report) {
-          final location = report.location;
-          return Marker(
-            markerId: MarkerId(report.id),
-            position: LatLng(
-              location['latitude'] as double,
-              location['longitude'] as double,
-            ),
-            icon: BitmapDescriptor.defaultMarkerWithHue(_getMarkerHue(report.type)),
-            onTap: () => _onMarkerTapped(report),
-          );
-        }).toSet();
+        _createMarkersFromReports(reports);
       });
     }
+  }
+
+  Future<void> _createMarkersFromReports(List<ReportCase> reports) async {
+    final markers = <Marker>{};
+    final sosReports = <ReportCase>[];
+    
+    for (final report in reports) {
+      final location = report.location;
+      BitmapDescriptor icon;
+      
+      if (report.type == ReportType.sos) {
+        icon = await _createSOSMarker();
+        sosReports.add(report);
+      } else {
+        icon = BitmapDescriptor.defaultMarkerWithHue(_getMarkerHue(report.type));
+      }
+      
+      markers.add(Marker(
+        markerId: MarkerId(report.id),
+        position: LatLng(
+          location['latitude'] as double,
+          location['longitude'] as double,
+        ),
+        icon: icon,
+        infoWindow: report.type == ReportType.sos 
+          ? InfoWindow(
+              title: '🚨 EMERGENCY SOS 🚨',
+              snippet: 'Case: ${report.id}\nTime: ${DateFormat('HH:mm:ss').format(report.timestamp)}\nLocation: ${report.location['landmark'] ?? 'Unknown'}',
+            )
+          : InfoWindow.noText,
+        onTap: () => _onMarkerTapped(report),
+      ));
+    }
+    
+    setState(() {
+      _markers = markers;
+      _sosReports = sosReports;
+    });
   }
 
   void _onMarkerTapped(ReportCase report) {
@@ -128,6 +160,8 @@ class _MapPageState extends State<MapPage> {
         return BitmapDescriptor.hueOrange;
       case ReportType.quickPin:
         return BitmapDescriptor.hueGreen;
+      case ReportType.sos:
+        return BitmapDescriptor.hueRed; // Use red for SOS
     }
   }
 
@@ -167,6 +201,18 @@ class _MapPageState extends State<MapPage> {
     _mapController = controller;
   }
 
+  // Animate camera to SOS location
+  Future<void> animateToSOSLocation(double latitude, double longitude) async {
+    if (_mapController != null) {
+      await _mapController!.animateCamera(
+        CameraUpdate.newLatLngZoom(
+          LatLng(latitude, longitude),
+          17.0,
+        ),
+      );
+    }
+  }
+
   @override
   void dispose() {
     _reportUpdateTimer?.cancel();
@@ -176,18 +222,24 @@ class _MapPageState extends State<MapPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'MAP',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.5,
+    return NotificationListener<SOSCreatedNotification>(
+      onNotification: (notification) {
+        // Animate camera to new SOS location
+        animateToSOSLocation(notification.latitude, notification.longitude);
+        return true;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            'MAP',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.5,
+            ),
           ),
+          centerTitle: true,
         ),
-        centerTitle: true,
-      ),
       body: Stack(
         children: [
           Container(
@@ -288,9 +340,68 @@ class _MapPageState extends State<MapPage> {
               ),
             ),
             ),
+          // SOS pulsing halos
+          ..._sosReports.map((sosReport) {
+            final location = sosReport.location;
+            return SOSPulsingHalo(
+              position: LatLng(
+                location['latitude'] as double,
+                location['longitude'] as double,
+              ),
+              mapController: _mapController,
+            );
+          }).toList(),
         ],
       ),
+      ),
     );
+  }
+
+  // Create custom SOS marker
+  Future<BitmapDescriptor> _createSOSMarker() async {
+    const double markerSize = 64.0;
+    final ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
+    final Canvas canvas = Canvas(pictureRecorder);
+    
+    // Draw the red circle
+    final Paint circlePaint = Paint()
+      ..color = const Color(0xFFFF1A1A)
+      ..style = PaintingStyle.fill;
+    
+    canvas.drawCircle(
+      const Offset(markerSize / 2, markerSize / 2),
+      markerSize / 2,
+      circlePaint,
+    );
+    
+    // Draw the white "SOS" text
+    final textPainter = TextPainter(
+      text: const TextSpan(
+        text: 'SOS',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.0,
+        ),
+      ),
+      textDirection: ui.TextDirection.ltr,
+    );
+    
+    textPainter.layout();
+    final textOffset = Offset(
+      (markerSize - textPainter.width) / 2,
+      (markerSize - textPainter.height) / 2,
+    );
+    textPainter.paint(canvas, textOffset);
+    
+    // Convert to image
+    final ui.Picture picture = pictureRecorder.endRecording();
+    final ui.Image image = await picture.toImage(markerSize.toInt(), markerSize.toInt());
+    final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    final Uint8List pngBytes = byteData!.buffer.asUint8List();
+    
+    return BitmapDescriptor.fromBytes(pngBytes);
   }
 }
 
@@ -416,6 +527,8 @@ class _ReportDetailWindowState extends State<_ReportDetailWindow> with SingleTic
         return AppColors.neonAmber;
       case ReportType.quickPin:
         return AppColors.neonGreen;
+      case ReportType.sos:
+        return AppColors.neonRed;
     }
   }
 
@@ -566,6 +679,8 @@ class _ReportDetailWindowState extends State<_ReportDetailWindow> with SingleTic
         return Icons.report_problem;
       case ReportType.quickPin:
         return Icons.location_on;
+      case ReportType.sos:
+        return Icons.sos;
     }
   }
 
@@ -577,6 +692,8 @@ class _ReportDetailWindowState extends State<_ReportDetailWindow> with SingleTic
         return 'SERIOUS INCIDENT';
       case ReportType.quickPin:
         return 'QUICK PIN';
+      case ReportType.sos:
+        return 'EMERGENCY SOS';
     }
   }
 }
@@ -695,6 +812,97 @@ class _LocationPermissionDialog extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// Pulsing halo widget for SOS markers
+class SOSPulsingHalo extends StatefulWidget {
+  final LatLng position;
+  final GoogleMapController? mapController;
+
+  const SOSPulsingHalo({
+    super.key,
+    required this.position,
+    required this.mapController,
+  });
+
+  @override
+  State<SOSPulsingHalo> createState() => _SOSPulsingHaloState();
+}
+
+class _SOSPulsingHaloState extends State<SOSPulsingHalo>
+    with TickerProviderStateMixin {
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+  Offset? _screenPosition;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    );
+    _pulseAnimation = Tween<double>(
+      begin: 0.3,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _pulseController,
+      curve: Curves.easeInOut,
+    ));
+    _pulseController.repeat(reverse: true);
+    _updateScreenPosition();
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  void _updateScreenPosition() async {
+    if (widget.mapController != null) {
+      final screenCoordinate = await widget.mapController!
+          .getScreenCoordinate(widget.position);
+      if (mounted) {
+        setState(() {
+          _screenPosition = Offset(
+            screenCoordinate.x.toDouble(),
+            screenCoordinate.y.toDouble(),
+          );
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_screenPosition == null) return const SizedBox.shrink();
+
+    return Positioned(
+      left: _screenPosition!.dx - 32,
+      top: _screenPosition!.dy - 32,
+      child: AnimatedBuilder(
+        animation: _pulseAnimation,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _pulseAnimation.value,
+            child: Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFFFF1A1A).withOpacity(0.2),
+                border: Border.all(
+                  color: const Color(0xFFFF1A1A).withOpacity(0.5),
+                  width: 2,
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
