@@ -8,6 +8,7 @@ import '../models/media_file.dart';
 import '../services/case_service.dart';
 import '../services/media_service.dart';
 import 'shared_widgets.dart';
+import 'location_info.dart';
 
 class ModeWitnessForm extends StatefulWidget {
   const ModeWitnessForm({super.key});
@@ -167,33 +168,7 @@ class _ModeWitnessFormState extends State<ModeWitnessForm> {
               ),
 
               // Location info
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: AppColors.neonAmber.withOpacity(0.3),
-                      width: 1,
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.videocam,
-                        color: AppColors.neonAmber.withOpacity(0.6),
-                        size: 16,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Near Library • 40.7306° N, 73.9352° W',
-                        style: AppTextStyles.cctvText(color: AppColors.neonAmber),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              LocationInfo(color: AppColors.neonAmber),
 
               // Content
               Expanded(

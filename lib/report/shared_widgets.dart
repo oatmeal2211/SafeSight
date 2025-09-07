@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import '../constants/app_theme.dart' show AppColors, AppTextStyles, neonGlow;
 import '../models/media_file.dart';
 import '../widgets/media_preview.dart';
+import '../services/location_service.dart';
 
 // MetaStrip - Unified details UI for all report screens
 class MetaStrip extends StatefulWidget {
@@ -124,26 +125,7 @@ class _MetaStripState extends State<MetaStrip> {
   }
 
   Future<String> _generateLandmark(Position position) async {
-    try {
-      final url = Uri.parse(
-        'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
-        '?location=${position.latitude},${position.longitude}'
-        '&radius=150'
-        '&key=\${GOOGLE_MAPS_API_KEY}'
-      );
-      
-      final response = await http.get(url);
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['results'] != null && data['results'].isNotEmpty) {
-          return 'Near ${data['results'][0]['name']}';
-        }
-      }
-      return 'Location Unknown';
-    } catch (e) {
-      debugPrint('Error fetching landmark: $e');
-      return 'Location Unknown';
-    }
+    return LocationService.getLandmark(position.latitude, position.longitude);
   }
 
   @override
