@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/case_service.dart';
+import '../services/security_notifier.dart';
+import '../services/notifications.dart';
 import '../constants/app_theme.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:intl/intl.dart';
 
 class SOSFullscreenPage extends StatefulWidget {
   const SOSFullscreenPage({super.key});
@@ -212,13 +213,29 @@ class _SOSFullscreenPageState extends State<SOSFullscreenPage> {
     try {
       // Create SOS report with current location and time
       final caseId = await CaseService.createSOSCase();
-      final now = DateTime.now();
-      final timeString = DateFormat('HH:mm:ss').format(now);
       
-      // Show success toast with details, different message for auto vs manual activation
-      final activationType = isAutoActivated ? "Auto-activated" : "Manually activated";
+      // Get the case details for notification
+      final sosCase = await CaseService.getCase(caseId);
+      if (sosCase != null) {
+        final location = sosCase.location;
+        final latitude = location['latitude'] as double;
+        final longitude = location['longitude'] as double;
+        final landmark = location['landmark'] as String?;
+        
+        // Notify security
+        await SecurityNotifier.notifySOS(caseId, latitude, longitude, landmark);
+        
+        // Dispatch notification to trigger map camera animation
+        SOSCreatedNotification(
+          caseId: caseId,
+          latitude: latitude,
+          longitude: longitude,
+        ).dispatch(context);
+      }
+      
+      // Show success toast with details
       Fluttertoast.showToast(
-        msg: "$activationType SOS Alert at $timeString\nCase ID: $caseId",
+        msg: "SOS sent. Security notified.",
         toastLength: Toast.LENGTH_LONG,
         gravity: ToastGravity.CENTER,
         backgroundColor: AppColors.neonRed,
