@@ -4,8 +4,10 @@ import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:async';
 import '../models/report_models.dart';
+import '../models/media_file.dart';
 import '../services/case_service.dart';
 import '../constants/app_theme.dart';
+import '../widgets/media_preview.dart';
 import 'package:flutter/services.dart';
 
 class MapPage extends StatefulWidget {
@@ -521,7 +523,29 @@ class _ReportDetailWindowState extends State<_ReportDetailWindow> with SingleTic
                             color: _themeColor,
                           ),
                         ],
-                        // TODO: Add media gallery here
+                        if (widget.report.mediaFiles != null && widget.report.mediaFiles!.isNotEmpty) ...[
+                          const SizedBox(height: 16.0),
+                          _DetailItem(
+                            icon: Icons.photo_library,
+                            title: 'Media',
+                            content: '',
+                            color: _themeColor,
+                          ),
+                          const SizedBox(height: 8.0),
+                          MediaGallery(
+                            mediaFiles: widget.report.mediaFiles!
+                                .map((path) => MediaFile(
+                                      id: path.split('/').last,
+                                      filePath: path,
+                                      type: path.toLowerCase().endsWith('.mp4')
+                                          ? MediaType.video
+                                          : MediaType.photo,
+                                      timestamp: DateTime.now(),
+                                    ))
+                                .toList(),
+                            maxItems: 4,
+                          ),
+                        ],
                       ],
                     ),
                   ),
