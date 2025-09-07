@@ -52,18 +52,36 @@ class MediaPreview extends StatelessWidget {
                 ),
               
               // Play icon overlay for videos
-              if (media.isVideo && showPlayIcon)
+                if (media.isVideo && showPlayIcon)
                 Center(
                   child: Container(
-                    padding: const EdgeInsets.all(8),
+                    width: 40,
+                    height: 40,
                     decoration: BoxDecoration(
                       color: Colors.black.withOpacity(0.5),
                       shape: BoxShape.circle,
+                      border: Border.all(
+                        color: AppColors.neonGreen,
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.neonGreen.withOpacity(0.3),
+                          blurRadius: 8,
+                          spreadRadius: 2,
+                        ),
+                      ],
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.play_arrow,
-                      color: Colors.white,
+                      color: AppColors.neonGreen,
                       size: 24,
+                      shadows: [
+                        Shadow(
+                          color: AppColors.neonGreen.withOpacity(0.5),
+                          blurRadius: 8,
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -211,18 +229,43 @@ class _FullScreenMediaState extends State<FullScreenMedia> {
           child: VideoPlayer(_controller!),
         ),
         if (!_isPlaying)
-          IconButton(
-            icon: const Icon(
-              Icons.play_arrow,
-              size: 50,
-              color: Colors.white,
-            ),
-            onPressed: () {
+          GestureDetector(
+            onTap: () {
               setState(() {
                 _isPlaying = true;
                 _controller!.play();
               });
             },
+            child: Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.5),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppColors.neonGreen,
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.neonGreen.withOpacity(0.3),
+                    blurRadius: 16,
+                    spreadRadius: 4,
+                  ),
+                ],
+              ),
+              child: Icon(
+                Icons.play_arrow,
+                color: AppColors.neonGreen,
+                size: 48,
+                shadows: [
+                  Shadow(
+                    color: AppColors.neonGreen.withOpacity(0.5),
+                    blurRadius: 12,
+                  ),
+                ],
+              ),
+            ),
           ),
       ],
     );
