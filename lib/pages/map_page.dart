@@ -88,12 +88,10 @@ class _MapPageState extends State<MapPage> {
           location['longitude'] as double,
         ),
         icon: icon,
-        infoWindow: report.type == ReportType.sos 
-          ? InfoWindow(
-              title: '🚨 EMERGENCY SOS 🚨',
+        infoWindow: InfoWindow(
+              title: _getInfoWindowTitle(report.type),
               snippet: 'Case: ${report.id}\nTime: ${DateFormat('HH:mm:ss').format(report.timestamp)}\nLocation: ${report.location['landmark'] ?? 'Unknown'}',
-            )
-          : InfoWindow.noText,
+            ),
         onTap: () => _onMarkerTapped(report),
       ));
     }
@@ -163,6 +161,19 @@ class _MapPageState extends State<MapPage> {
         return BitmapDescriptor.hueGreen;
       case ReportType.sos:
         return BitmapDescriptor.hueRed; // Use red for SOS
+    }
+  }
+
+  String _getInfoWindowTitle(ReportType type) {
+    switch (type) {
+      case ReportType.amber:
+        return '⚠️ AMBER ALERT';
+      case ReportType.witness:
+        return '⚡ SERIOUS INCIDENT';
+      case ReportType.quickPin:
+        return '📍 QUICK PIN';
+      case ReportType.sos:
+        return '🚨 EMERGENCY SOS 🚨';
     }
   }
 
