@@ -3,8 +3,10 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import '../constants/app_theme.dart';
 import '../models/report_models.dart';
+import '../models/media_file.dart';
 import '../services/case_service.dart';
 import '../services/location_service.dart';
+import '../services/media_service.dart';
 import 'shared_widgets.dart';
 
 class ModeAmberDetails extends StatefulWidget {
@@ -21,7 +23,7 @@ class _ModeAmberDetailsState extends State<ModeAmberDetails> {
   final _picker = ImagePicker();
   
   PrivacyMode _privacyMode = PrivacyMode.anonymous;
-  List<String> _mediaFiles = [];
+  List<MediaFile> _mediaFiles = [];
   Map<String, dynamic>? _locationData;
   
   @override
@@ -43,8 +45,9 @@ class _ModeAmberDetailsState extends State<ModeAmberDetails> {
     try {
       final XFile? image = await _picker.pickImage(source: ImageSource.camera);
       if (image != null) {
+        final mediaFile = await MediaService.saveMedia(image.path);
         setState(() {
-          _mediaFiles.add(image.path);
+          _mediaFiles.add(mediaFile);
         });
         Fluttertoast.showToast(
           msg: "Photo captured",
@@ -65,8 +68,9 @@ class _ModeAmberDetailsState extends State<ModeAmberDetails> {
     try {
       final XFile? video = await _picker.pickVideo(source: ImageSource.camera);
       if (video != null) {
+        final mediaFile = await MediaService.saveMedia(video.path);
         setState(() {
-          _mediaFiles.add(video.path);
+          _mediaFiles.add(mediaFile);
         });
         Fluttertoast.showToast(
           msg: "Video recorded",
@@ -89,7 +93,7 @@ class _ModeAmberDetailsState extends State<ModeAmberDetails> {
         widget.caseId,
         note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
         privacy: _privacyMode,
-        mediaFiles: _mediaFiles,
+        mediaFiles: _mediaFiles.map((m) => m.filePath).toList(),
       );
 
       Fluttertoast.showToast(

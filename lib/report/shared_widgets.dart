@@ -5,7 +5,9 @@ import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:intl/intl.dart';
-import '../constants/app_theme.dart';
+import '../constants/app_theme.dart' show AppColors, AppTextStyles, neonGlow;
+import '../models/media_file.dart';
+import '../widgets/media_preview.dart';
 
 // MetaStrip - Unified details UI for all report screens
 class MetaStrip extends StatefulWidget {
@@ -537,7 +539,7 @@ class NeonTextField extends StatelessWidget {
 
 // Media picker row widget
 class MediaRow extends StatelessWidget {
-  final List<String> mediaFiles;
+  final List<MediaFile> mediaFiles;
   final VoidCallback? onAddPhoto;
   final VoidCallback? onAddVideo;
   final Function(int)? onRemove;
@@ -585,16 +587,31 @@ class MediaRow extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(
-                  entry.value.contains('video') ? Icons.videocam : Icons.photo,
-                  color: AppColors.neonGreen,
-                  size: 20,
+                SizedBox(
+                  width: 60,
+                  height: 60,
+                  child: MediaPreview(
+                    media: entry.value,
+                    showPlayIcon: false,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
-                    entry.value,
-                    style: AppTextStyles.bodyText(color: AppColors.white),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        entry.value.isVideo ? 'Video' : 'Photo',
+                        style: AppTextStyles.neonSubtitle(
+                          color: entry.value.isVideo ? AppColors.neonOrange : AppColors.neonBlue,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Captured ${DateFormat('MMM d, HH:mm').format(entry.value.timestamp)}',
+                        style: AppTextStyles.bodyText(color: AppColors.inactiveGray),
+                      ),
+                    ],
                   ),
                 ),
                 IconButton(

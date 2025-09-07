@@ -4,7 +4,9 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import '../constants/app_theme.dart';
 import '../models/report_models.dart';
+import '../models/media_file.dart';
 import '../services/case_service.dart';
+import '../services/media_service.dart';
 import 'shared_widgets.dart';
 
 class ModeWitnessForm extends StatefulWidget {
@@ -20,15 +22,16 @@ class _ModeWitnessFormState extends State<ModeWitnessForm> {
   
   IncidentCategory? _selectedCategory;
   PrivacyMode _privacyMode = PrivacyMode.anonymous;
-  final List<String> _mediaFiles = [];
+  final List<MediaFile> _mediaFiles = [];
   bool _isSubmitting = false;
 
   Future<void> _pickPhoto() async {
     try {
       final XFile? image = await _picker.pickImage(source: ImageSource.camera);
       if (image != null) {
+        final mediaFile = await MediaService.saveMedia(image.path);
         setState(() {
-          _mediaFiles.add(image.path);
+          _mediaFiles.add(mediaFile);
         });
         Fluttertoast.showToast(
           msg: "Photo captured",
@@ -49,8 +52,9 @@ class _ModeWitnessFormState extends State<ModeWitnessForm> {
     try {
       final XFile? video = await _picker.pickVideo(source: ImageSource.camera);
       if (video != null) {
+        final mediaFile = await MediaService.saveMedia(video.path);
         setState(() {
-          _mediaFiles.add(video.path);
+          _mediaFiles.add(mediaFile);
         });
         Fluttertoast.showToast(
           msg: "Video recorded",
@@ -90,7 +94,7 @@ class _ModeWitnessFormState extends State<ModeWitnessForm> {
             ? null 
             : _descriptionController.text.trim(),
         privacyMode: _privacyMode,
-        mediaFiles: _mediaFiles,
+        mediaFiles: _mediaFiles.map((m) => m.filePath).toList(),
       );
 
       Fluttertoast.showToast(
