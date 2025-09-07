@@ -128,6 +128,25 @@ class CaseService {
     return caseId;
   }
 
+  static Future<String> createSOSCase() async {
+    await _initializeFromStorage();
+    final locationData = await LocationService.getLocationData();
+    final caseId = _generateCaseId();
+    
+    final reportCase = ReportCase(
+      id: caseId,
+      type: ReportType.sos,
+      timestamp: DateTime.now(),
+      location: locationData,
+      note: 'Emergency SOS activated',
+      privacy: PrivacyMode.identified, // SOS should be identified for emergency response
+    );
+
+    _cases[caseId] = reportCase;
+    await _saveToStorage();
+    return caseId;
+  }
+
   static Future<ReportCase?> getCase(String caseId) async {
     await _initializeFromStorage();
     return _cases[caseId];

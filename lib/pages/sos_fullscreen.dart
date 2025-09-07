@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../services/case_service.dart';
+import '../services/security_notifier.dart';
+import '../services/notifications.dart';
+import '../constants/app_theme.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class SOSFullscreenPage extends StatefulWidget {
   const SOSFullscreenPage({super.key});
@@ -24,7 +29,18 @@ class _SOSFullscreenPageState extends State<SOSFullscreenPage> {
         setState(() {
           _countdown--;
         });
-        _startCountdown();
+        
+        // Add haptic feedback for urgency in last 3 seconds
+        if (_countdown <= 3 && _countdown > 0) {
+          HapticFeedback.mediumImpact();
+        }
+        
+        if (_countdown == 0) {
+          // Auto-activate SOS when countdown reaches 0
+          _activateSOS(isAutoActivated: true);
+        } else {
+          _startCountdown();
+        }
       }
     });
   }
@@ -66,17 +82,20 @@ class _SOSFullscreenPageState extends State<SOSFullscreenPage> {
             const SizedBox(height: 20),
             if (!_isActivated) ...[
               Text(
-                'Auto-activating in $_countdown seconds',
-                style: const TextStyle(
-                  color: Color(0xFF6E6E6E),
-                  fontSize: 16,
+                _countdown > 0 
+                  ? 'Auto-activating in $_countdown seconds'
+                  : 'ACTIVATING EMERGENCY ALERT...',
+                style: TextStyle(
+                  color: _countdown <= 3 ? const Color(0xFFFF1A1A) : const Color(0xFF6E6E6E),
+                  fontSize: _countdown <= 3 ? 18 : 16,
+                  fontWeight: _countdown <= 3 ? FontWeight.bold : FontWeight.normal,
                   letterSpacing: 1.2,
                 ),
               ),
               const SizedBox(height: 40),
             ],
             GestureDetector(
-              onTap: _activateSOS,
+              onTap: () => _activateSOS(),
               child: Container(
                 width: 200,
                 height: 200,
@@ -85,26 +104,42 @@ class _SOSFullscreenPageState extends State<SOSFullscreenPage> {
                   color: const Color(0xFFFF1A1A),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFFF1A1A).withOpacity(0.6),
-                      blurRadius: 30,
-                      spreadRadius: 15,
+                      color: const Color(0xFFFF1A1A).withOpacity(_countdown <= 3 ? 0.8 : 0.6),
+                      blurRadius: _countdown <= 3 ? 40 : 30,
+                      spreadRadius: _countdown <= 3 ? 20 : 15,
                     ),
                     BoxShadow(
-                      color: const Color(0xFFFF1A1A).withOpacity(0.8),
-                      blurRadius: 60,
-                      spreadRadius: 5,
+                      color: const Color(0xFFFF1A1A).withOpacity(_countdown <= 3 ? 1.0 : 0.8),
+                      blurRadius: _countdown <= 3 ? 80 : 60,
+                      spreadRadius: _countdown <= 3 ? 10 : 5,
                     ),
                   ],
                 ),
-                child: const Center(
-                  child: Text(
-                    'SOS',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 48,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 3.0,
-                    ),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        'SOS',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 48,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 3.0,
+                        ),
+                      ),
+                      if (!_isActivated && _countdown <= 3 && _countdown > 0) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          '$_countdown',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               ),
@@ -118,7 +153,7 @@ class _SOSFullscreenPageState extends State<SOSFullscreenPage> {
               ),
               const SizedBox(height: 16),
               const Text(
-                'EMERGENCY ALERT SENT',
+                'SOS ALERT CREATED',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Color(0xFF39FF14),
@@ -129,7 +164,8 @@ class _SOSFullscreenPageState extends State<SOSFullscreenPage> {
               ),
               const SizedBox(height: 8),
               const Text(
-                'Help is on the way',
+                'Location marked on map\nReturning to map view...',
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Color(0xFF6E6E6E),
                   fontSize: 14,
@@ -152,11 +188,11 @@ class _SOSFullscreenPageState extends State<SOSFullscreenPage> {
             if (!_isActivated)
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text(
-                  'CANCEL',
+                child: Text(
+                  _countdown <= 3 ? 'TAP TO CANCEL' : 'CANCEL',
                   style: TextStyle(
-                    color: Color(0xFF6E6E6E),
-                    fontSize: 16,
+                    color: _countdown <= 3 ? const Color(0xFFFF1A1A) : const Color(0xFF6E6E6E),
+                    fontSize: _countdown <= 3 ? 18 : 16,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 1.5,
                   ),
@@ -168,25 +204,58 @@ class _SOSFullscreenPageState extends State<SOSFullscreenPage> {
     );
   }
 
-  void _activateSOS() {
+  void _activateSOS({bool isAutoActivated = false}) async {
     HapticFeedback.heavyImpact();
     setState(() {
       _isActivated = true;
     });
 
-    // Simulate sending emergency alert
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Emergency contacts notified',
-              style: TextStyle(color: Colors.white),
-            ),
-            backgroundColor: Color(0xFF39FF14),
-          ),
-        );
+    try {
+      // Create SOS report with current location and time
+      final caseId = await CaseService.createSOSCase();
+      
+      // Get the case details for notification
+      final sosCase = await CaseService.getCase(caseId);
+      if (sosCase != null) {
+        final location = sosCase.location;
+        final latitude = location['latitude'] as double;
+        final longitude = location['longitude'] as double;
+        final landmark = location['landmark'] as String?;
+        
+        // Notify security
+        await SecurityNotifier.notifySOS(caseId, latitude, longitude, landmark);
+        
+        // Dispatch notification to trigger map camera animation
+        SOSCreatedNotification(
+          caseId: caseId,
+          latitude: latitude,
+          longitude: longitude,
+        ).dispatch(context);
       }
-    });
+      
+      // Show success toast with details
+      Fluttertoast.showToast(
+        msg: "SOS sent. Security notified.",
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.CENTER,
+        backgroundColor: AppColors.neonRed,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
+
+      // Navigate back to map after a delay to show the SOS marker
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) {
+          Navigator.pop(context); // Go back to main app with map tab
+        }
+      });
+    } catch (e) {
+      // Show error if location/report creation fails
+      Fluttertoast.showToast(
+        msg: "Failed to create SOS alert: $e",
+        backgroundColor: AppColors.neonRed,
+        textColor: Colors.white,
+      );
+    }
   }
 }
