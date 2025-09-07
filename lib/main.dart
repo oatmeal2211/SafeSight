@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'pages/map_page.dart';
 import 'pages/report_page.dart';
 import 'pages/circle_page.dart';
@@ -13,7 +14,13 @@ import 'report/mode_quick_pin.dart';
 import 'report/witness_success_page.dart';
 import 'constants/app_theme.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await dotenv.load();
+  } catch (e) {
+    debugPrint('Warning: .env file not found. Using system environment variables.');
+  }
   runApp(const SafeSightApp());
 }
 
@@ -99,12 +106,12 @@ class _MainScaffoldState extends State<MainScaffold> {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: AppColors.neonRed.withValues(alpha: 0.6),
+              color: AppColors.neonRed.withOpacity(0.6),
               blurRadius: 25,
               spreadRadius: 8,
             ),
             BoxShadow(
-              color: AppColors.neonRed.withValues(alpha: 0.4),
+              color: AppColors.neonRed.withOpacity(0.4),
               blurRadius: 50,
               spreadRadius: 3,
             ),
@@ -158,7 +165,7 @@ class _MainScaffoldState extends State<MainScaffold> {
               page = const ReportHome();
               break;
             case '/report/amber':
-              page = const ModeAmberConfirm();
+              page = const ModeAmberConfirm(caseId: ''); // Pass empty string for now
               break;
             case '/report/amber/details':
               final caseId = settings.arguments as String?;
@@ -251,7 +258,7 @@ class NeonIconLabel extends StatelessWidget {
                   ? BoxDecoration(
                       boxShadow: [
                         BoxShadow(
-                          color: color.withValues(alpha: 0.5),
+                          color: color.withOpacity(0.5),
                           blurRadius: 8,
                           spreadRadius: 2,
                         ),

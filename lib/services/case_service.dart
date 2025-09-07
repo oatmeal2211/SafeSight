@@ -1,11 +1,42 @@
 import '../models/report_models.dart';
 import 'location_service.dart';
-
-enum PinType { amber, red, gray }
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class CaseService {
-  static final Map<String, ReportCase> _cases = {};
+  static const String _storageKey = 'report_cases';
+  static Map<String, ReportCase> _cases = {};
   static int _caseCounter = 1000;
+  static bool _isInitialized = false;
+
+  static Future<void> _initializeFromStorage() async {
+    if (_isInitialized) return;
+    
+    final prefs = await SharedPreferences.getInstance();
+    final String? casesJson = prefs.getString(_storageKey);
+    
+    if (casesJson != null) {
+      final List<dynamic> casesList = jsonDecode(casesJson);
+      _cases = {
+        for (var caseData in casesList)
+          caseData['id']: ReportCase.fromJson(caseData)
+      };
+      
+      // Update counter based on existing cases
+      for (var id in _cases.keys) {
+        final caseNumber = int.tryParse(id.replaceAll('CASE-', '')) ?? 1000;
+        _caseCounter = _caseCounter > caseNumber ? _caseCounter : caseNumber;
+      }
+    }
+    
+    _isInitialized = true;
+  }
+
+  static Future<void> _saveToStorage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final casesList = _cases.values.map((c) => c.toJson()).toList();
+    await prefs.setString(_storageKey, jsonEncode(casesList));
+  }
 
   static String _generateCaseId() {
     _caseCounter++;
@@ -13,6 +44,7 @@ class CaseService {
   }
 
   static Future<String> createAmberCase() async {
+    await _initializeFromStorage();
     final locationData = await LocationService.getLocationData();
     final caseId = _generateCaseId();
     
@@ -20,17 +52,12 @@ class CaseService {
       id: caseId,
       type: ReportType.amber,
       timestamp: DateTime.now(),
-      latitude: locationData['latitude'],
-      longitude: locationData['longitude'],
-      nearestLandmark: locationData['landmark'],
-      privacyMode: PrivacyMode.anonymous,
+      location: locationData,
+      privacy: PrivacyMode.anonymous,
     );
 
     _cases[caseId] = reportCase;
-    
-    // Drop amber pin on map (stub)
-    MapPins.dropPin(PinType.amber, reportCase.latitude!, reportCase.longitude!);
-    
+    await _saveToStorage();
     return caseId;
   }
 
@@ -40,13 +67,15 @@ class CaseService {
     PrivacyMode? privacy,
     List<String>? mediaFiles,
   }) async {
+    await _initializeFromStorage();
     final existingCase = _cases[caseId];
     if (existingCase != null) {
       _cases[caseId] = existingCase.copyWith(
-        description: note,
-        privacyMode: privacy,
+        note: note,
+        privacy: privacy,
         mediaFiles: mediaFiles,
       );
+      await _saveToStorage();
     }
   }
 
@@ -56,6 +85,7 @@ class CaseService {
     PrivacyMode privacyMode = PrivacyMode.anonymous,
     List<String> mediaFiles = const [],
   }) async {
+    await _initializeFromStorage();
     final locationData = await LocationService.getLocationData();
     final caseId = _generateCaseId();
     
@@ -63,20 +93,15 @@ class CaseService {
       id: caseId,
       type: ReportType.witness,
       timestamp: DateTime.now(),
-      latitude: locationData['latitude'],
-      longitude: locationData['longitude'],
-      nearestLandmark: locationData['landmark'],
-      description: description,
-      privacyMode: privacyMode,
+      location: locationData,
+      note: description,
+      privacy: privacyMode,
       incidentCategory: category,
       mediaFiles: mediaFiles,
     );
 
     _cases[caseId] = reportCase;
-    
-    // Drop red pin on map (stub)
-    MapPins.dropPin(PinType.red, reportCase.latitude!, reportCase.longitude!);
-    
+    await _saveToStorage();
     return caseId;
   }
 
@@ -84,6 +109,7 @@ class CaseService {
     required QuickReportCategory category,
     String? description,
   }) async {
+    await _initializeFromStorage();
     final locationData = await LocationService.getLocationData();
     final caseId = _generateCaseId();
     
@@ -91,54 +117,33 @@ class CaseService {
       id: caseId,
       type: ReportType.quickPin,
       timestamp: DateTime.now(),
-      latitude: locationData['latitude'],
-      longitude: locationData['longitude'],
-      nearestLandmark: locationData['landmark'],
-      description: description,
-      quickCategory: category,
-      privacyMode: PrivacyMode.anonymous,
+      location: locationData,
+      note: description,
+      quickReportCategory: category,
+      privacy: PrivacyMode.anonymous,
     );
 
     _cases[caseId] = reportCase;
-    
-    // Drop gray pin on map (stub)
-    MapPins.dropPin(PinType.gray, reportCase.latitude!, reportCase.longitude!);
-    
+    await _saveToStorage();
     return caseId;
   }
 
-  static ReportCase? getCase(String caseId) {
+  static Future<ReportCase?> getCase(String caseId) async {
+    await _initializeFromStorage();
     return _cases[caseId];
   }
 
-  static List<ReportCase> getAllCases() {
+  static Future<List<ReportCase>> getAllCases() async {
+    await _initializeFromStorage();
     return _cases.values.toList();
   }
-}
 
-// Mock map pins service
-class MapPins {
-  static final List<Map<String, dynamic>> _pins = [];
-
-  static void dropPin(PinType type, double latitude, double longitude) {
-    final pin = {
-      'type': type,
-      'latitude': latitude,
-      'longitude': longitude,
-      'timestamp': DateTime.now(),
-    };
-    
-    _pins.add(pin);
-    
-    // Log for debugging
-    print('📍 Dropped ${type.name} pin at $latitude, $longitude');
-  }
-
-  static List<Map<String, dynamic>> getAllPins() {
-    return List.from(_pins);
-  }
-
-  static void clearPins() {
-    _pins.clear();
+  static Future<List<ReportCase>> getRecentCases({int days = 7}) async {
+    await _initializeFromStorage();
+    final now = DateTime.now();
+    return _cases.values
+        .where((report) => now.difference(report.timestamp).inDays <= days)
+        .toList()
+      ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
   }
 }

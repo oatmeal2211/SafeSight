@@ -1,5 +1,8 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:http/http.dart' as http;
 
 class LocationService {
   static Position? _lastKnownPosition;
@@ -38,45 +41,26 @@ class LocationService {
   }
 
   static Future<String> getLandmark(double latitude, double longitude) async {
-    // Mock landmark detection based on campus locations
-    final landmarks = [
-      {'name': 'Library Entrance', 'lat': 40.7306, 'lng': -73.9352, 'radius': 0.001},
-      {'name': 'Student Center', 'lat': 40.7308, 'lng': -73.9355, 'radius': 0.001},
-      {'name': 'Science Building', 'lat': 40.7304, 'lng': -73.9349, 'radius': 0.001},
-      {'name': 'Dormitory A', 'lat': 40.7310, 'lng': -73.9358, 'radius': 0.001},
-      {'name': 'Cafeteria', 'lat': 40.7302, 'lng': -73.9346, 'radius': 0.001},
-      {'name': 'Gymnasium', 'lat': 40.7312, 'lng': -73.9361, 'radius': 0.001},
-      {'name': 'Parking Lot B', 'lat': 40.7300, 'lng': -73.9343, 'radius': 0.001},
-      {'name': 'Campus Plaza', 'lat': 40.7307, 'lng': -73.9353, 'radius': 0.001},
-    ];
-
-    // Find nearest landmark
-    double minDistance = double.infinity;
-    String nearestLandmark = 'Campus Area';
-
-    for (final landmark in landmarks) {
-      final landmarkLat = landmark['lat'] as double;
-      final landmarkLng = landmark['lng'] as double;
-
-      final distance = Geolocator.distanceBetween(
-        latitude,
-        longitude,
-        landmarkLat,
-        landmarkLng,
+    try {
+      final url = Uri.parse(
+        'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
+        '?location=$latitude,$longitude'
+        '&radius=150'
+        '&key=\${GOOGLE_MAPS_API_KEY}'
       );
-
-      if (distance < minDistance) {
-        minDistance = distance;
-        nearestLandmark = landmark['name'] as String;
+      
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['results'] != null && data['results'].isNotEmpty) {
+          return 'Near ${data['results'][0]['name']}';
+        }
       }
+      return 'Campus Area';
+    } catch (e) {
+      debugPrint('Error fetching landmark: $e');
+      return 'Campus Area';
     }
-
-    // If within 100 meters of a landmark, return it
-    if (minDistance <= 100) {
-      return nearestLandmark;
-    }
-
-    return 'Campus Area';
   }
 
   static String formatCoordinates(double latitude, double longitude) {

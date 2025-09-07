@@ -1,6 +1,7 @@
 import 'dart:async';
-import 'dart:math';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:intl/intl.dart';
@@ -28,7 +29,6 @@ class _MetaStripState extends State<MetaStrip> {
   String _accuracy = '—';
   String _landmark = 'Near Student Center';
   bool _recBlinking = true;
-  bool _locationPermissionGranted = false;
 
   @override
   void initState() {
@@ -55,7 +55,7 @@ class _MetaStripState extends State<MetaStrip> {
 
   void _updateTime() {
     final now = DateTime.now();
-    final formatter = DateFormat('yyyy-MM-dd HH:mm:ss.SSS');
+    final formatter = DateFormat('yyyy-MM-dd HH:mm:ss');
     setState(() {
       _currentTime = formatter.format(now);
     });
@@ -72,9 +72,6 @@ class _MetaStripState extends State<MetaStrip> {
   Future<void> _requestLocationPermission() async {
     final status = await Permission.location.request();
     if (status.isGranted) {
-      setState(() {
-        _locationPermissionGranted = true;
-      });
       _startLocationUpdates();
     } else {
       if (mounted) {
@@ -88,7 +85,7 @@ class _MetaStripState extends State<MetaStrip> {
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
-              side: BorderSide(color: AppColors.neonRed.withValues(alpha: 0.3)),
+              side: BorderSide(color: AppColors.neonRed.withOpacity(0.3)),
             ),
           ),
         );
@@ -103,12 +100,17 @@ class _MetaStripState extends State<MetaStrip> {
         distanceFilter: 1,
       ),
     ).listen(
-      (Position position) {
+      (Position position) async {
         setState(() {
           _coordinates = '${position.latitude.toStringAsFixed(5)}, ${position.longitude.toStringAsFixed(5)}';
           _accuracy = '${position.accuracy.round()}m';
-          _landmark = _generateLandmark(position);
         });
+        final landmark = await _generateLandmark(position);
+        if (mounted) {
+          setState(() {
+            _landmark = landmark;
+          });
+        }
       },
       onError: (error) {
         setState(() {
@@ -119,22 +121,27 @@ class _MetaStripState extends State<MetaStrip> {
     );
   }
 
-  String _generateLandmark(Position position) {
-    // Mock landmark generation based on coordinates
-    final buildings = [
-      'Student Center',
-      'Engineering Hall',
-      'Library Building',
-      'Science Complex',
-      'Arts Building',
-      'Administration Building',
-      'Gymnasium',
-      'Dining Hall',
-      'Dormitory Block A',
-      'Parking Structure'
-    ];
-    final random = Random(position.latitude.hashCode + position.longitude.hashCode);
-    return 'Near ${buildings[random.nextInt(buildings.length)]}';
+  Future<String> _generateLandmark(Position position) async {
+    try {
+      final url = Uri.parse(
+        'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
+        '?location=${position.latitude},${position.longitude}'
+        '&radius=150'
+        '&key=\${GOOGLE_MAPS_API_KEY}'
+      );
+      
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['results'] != null && data['results'].isNotEmpty) {
+          return 'Near ${data['results'][0]['name']}';
+        }
+      }
+      return 'Location Unknown';
+    } catch (e) {
+      debugPrint('Error fetching landmark: $e');
+      return 'Location Unknown';
+    }
   }
 
   @override
@@ -144,7 +151,7 @@ class _MetaStripState extends State<MetaStrip> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         border: Border.all(
-          color: AppColors.neonGreen.withValues(alpha: 0.2),
+          color: AppColors.neonGreen.withOpacity(0.2),
           width: 1,
         ),
         borderRadius: BorderRadius.circular(8),
@@ -195,7 +202,7 @@ class _MetaStripState extends State<MetaStrip> {
         gradient: LinearGradient(
           colors: [
             Colors.transparent,
-            AppColors.neonGreen.withValues(alpha: 0.2),
+            AppColors.neonGreen.withOpacity(0.2),
             Colors.transparent,
           ],
         ),
@@ -261,7 +268,7 @@ class NeonButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.3),
+            color: color.withOpacity(0.3),
             blurRadius: 12,
             spreadRadius: 1,
           ),
@@ -323,11 +330,11 @@ class NeonTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+        border: Border.all(color: color.withOpacity(0.3), width: 1),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.1),
+            color: color.withOpacity(0.1),
             blurRadius: 8,
             spreadRadius: 1,
           ),
@@ -368,7 +375,7 @@ class NeonTile extends StatelessWidget {
                 ),
                 Icon(
                   Icons.arrow_forward_ios,
-                  color: color.withValues(alpha: 0.6),
+                  color: color.withOpacity(0.6),
                   size: 16,
                 ),
               ],
@@ -403,7 +410,7 @@ class NeonDropdown<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+        border: Border.all(color: color.withOpacity(0.3), width: 1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: DropdownButtonFormField<T>(
@@ -450,7 +457,7 @@ class NeonSegmented<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+        border: Border.all(color: color.withOpacity(0.3), width: 1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -462,7 +469,7 @@ class NeonSegmented<T> extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 decoration: BoxDecoration(
-                  color: isSelected ? color.withValues(alpha: 0.2) : Colors.transparent,
+                  color: isSelected ? color.withOpacity(0.2) : Colors.transparent,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Center(
@@ -507,7 +514,7 @@ class NeonTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+        border: Border.all(color: color.withOpacity(0.3), width: 1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: TextField(
@@ -573,7 +580,7 @@ class MediaRow extends StatelessWidget {
             margin: const EdgeInsets.only(bottom: 8),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              border: Border.all(color: AppColors.neonGreen.withValues(alpha: 0.3)),
+              border: Border.all(color: AppColors.neonGreen.withOpacity(0.3)),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(

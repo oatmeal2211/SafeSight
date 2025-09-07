@@ -10,7 +10,7 @@ import 'shared_widgets.dart';
 class ModeAmberDetails extends StatefulWidget {
   final String caseId;
 
-  const ModeAmberDetails({Key? key, required this.caseId}) : super(key: key);
+  const ModeAmberDetails({super.key, required this.caseId});
 
   @override
   State<ModeAmberDetails> createState() => _ModeAmberDetailsState();
@@ -32,9 +32,11 @@ class _ModeAmberDetailsState extends State<ModeAmberDetails> {
 
   Future<void> _loadLocationData() async {
     final data = await LocationService.getLocationData();
-    setState(() {
-      _locationData = data;
-    });
+    if (mounted) {
+      setState(() {
+        _locationData = data;
+      });
+    }
   }
 
   Future<void> _pickPhoto() async {
@@ -137,119 +139,188 @@ class _ModeAmberDetailsState extends State<ModeAmberDetails> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(
-          'Amber Alert Details',
-          style: AppTextStyles.neonTitle(color: AppColors.neonRed),
-        ),
-        centerTitle: true,
-        backgroundColor: AppColors.background,
-        iconTheme: const IconThemeData(color: AppColors.neonRed),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            const MetaStrip(),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Auto-filled information
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.neonRed.withValues(alpha: 0.3),
-                        width: 1,
-                      ),
-                      color: AppColors.neonRed.withValues(alpha: 0.05),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'AUTO-FILLED INFO',
-                          style: AppTextStyles.neonButton(color: AppColors.neonRed).copyWith(
-                            fontSize: 16,
-                          ),
+      body: ScanlineBackground(
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Header
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppColors.neonRed,
+                          width: 1,
                         ),
-                        const SizedBox(height: 16),
-                        if (_locationData != null) ...[
-                          _buildInfoRow('Time', _locationData!['timestamp']),
-                          _buildInfoRow('Coordinates', _locationData!['coordinates']),
-                          _buildInfoRow('Nearest landmark', _locationData!['landmark']),
-                        ] else ...[
-                          const Center(
-                            child: CircularProgressIndicator(
-                              color: AppColors.neonRed,
-                            ),
-                          ),
-                        ],
-                      ],
+                      ),
+                      child: IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(
+                          Icons.chevron_left,
+                          color: AppColors.neonRed,
+                          size: 24,
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  // Optional description
-                  Text(
-                    'Describe why you feel unsafe...',
-                    style: AppTextStyles.bodyText(color: AppColors.neonRed),
-                  ),
-                  const SizedBox(height: 8),
-                  NeonTextField(
-                    label: 'Additional Details',
-                    hint: 'Optional additional details',
-                    controller: _noteController,
-                    maxLines: 3,
-                    color: AppColors.neonRed,
-                  ),
-                  const SizedBox(height: 24),
-                  // Media row
-                  MediaRow(
-                    mediaFiles: _mediaFiles,
-                    onAddPhoto: _pickPhoto,
-                    onAddVideo: _pickVideo,
-                    onRemove: (index) {
-                      setState(() {
-                        _mediaFiles.removeAt(index);
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 24),
-                  // Privacy mode
-                  Text(
-                    'Privacy Mode',
-                    style: AppTextStyles.bodyText(color: AppColors.neonRed),
-                  ),
-                  const SizedBox(height: 8),
-                  NeonSegmented<PrivacyMode>(
-                    value: _privacyMode,
-                    options: [PrivacyMode.anonymous, PrivacyMode.pseudonymous, PrivacyMode.identified],
-                    optionToString: (mode) => mode.toString().split('.').last,
-                    onChanged: (value) {
-                      setState(() {
-                        _privacyMode = value;
-                      });
-                    },
-                    color: AppColors.neonRed,
-                  ),
-                  const SizedBox(height: 40),
-                  // Save button
-                  SizedBox(
-                    width: double.infinity,
-                    child: NeonButton(
-                      text: 'Save',
-                      color: AppColors.neonRed,
-                      filled: true,
-                      onPressed: _saveDetails,
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Text(
+                        'AMBER ALERT DETAILS',
+                        style: AppTextStyles.neonTitle(color: AppColors.neonRed).copyWith(
+                          fontSize: 20,
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+
+              // Location info
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: AppColors.neonRed.withOpacity(0.3),
+                      width: 1,
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.videocam,
+                        color: AppColors.neonRed.withOpacity(0.6),
+                        size: 16,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Near Library • 40.7306° N, 73.9352° W',
+                        style: AppTextStyles.cctvText(color: AppColors.neonRed),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Content
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 16),
+                      // Auto-filled information
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppColors.neonRed.withOpacity(0.3),
+                            width: 1,
+                          ),
+                          color: AppColors.neonRed.withOpacity(0.05),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'AUTO-FILLED INFO',
+                              style: AppTextStyles.neonButton(color: AppColors.neonRed).copyWith(
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            if (_locationData != null) ...[
+                              _buildInfoRow('Time', _locationData!['timestamp']),
+                              _buildInfoRow('Coordinates', _locationData!['coordinates']),
+                              _buildInfoRow('Nearest landmark', _locationData!['landmark']),
+                            ] else ...[
+                              const Center(
+                                child: CircularProgressIndicator(
+                                  color: AppColors.neonRed,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      // Optional description
+                      Text(
+                        'Describe why you feel unsafe...',
+                        style: AppTextStyles.bodyText(color: AppColors.neonRed),
+                      ),
+                      const SizedBox(height: 8),
+                      NeonTextField(
+                        label: 'Additional Details',
+                        hint: 'Optional additional details',
+                        controller: _noteController,
+                        maxLines: 3,
+                        color: AppColors.neonRed,
+                      ),
+                      const SizedBox(height: 24),
+                      // Media row
+                      MediaRow(
+                        mediaFiles: _mediaFiles,
+                        onAddPhoto: _pickPhoto,
+                        onAddVideo: _pickVideo,
+                        onRemove: (index) {
+                          setState(() {
+                            _mediaFiles.removeAt(index);
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                      // Privacy mode
+                      Text(
+                        'Privacy Mode',
+                        style: AppTextStyles.bodyText(color: AppColors.neonRed),
+                      ),
+                      const SizedBox(height: 8),
+                      NeonSegmented<PrivacyMode>(
+                        value: _privacyMode,
+                        options: [PrivacyMode.anonymous, PrivacyMode.pseudonymous, PrivacyMode.identified],
+                        optionToString: (mode) {
+                          switch (mode) {
+                            case PrivacyMode.anonymous:
+                              return 'Anonymous';
+                            case PrivacyMode.pseudonymous:
+                              return 'Pseudo';
+                            case PrivacyMode.identified:
+                              return 'Identified';
+                          }
+                        },
+                        onChanged: (value) {
+                          setState(() {
+                            _privacyMode = value;
+                          });
+                        },
+                        color: AppColors.neonRed,
+                      ),
+                      const SizedBox(height: 40),
+                      // Save button
+                      SizedBox(
+                        width: double.infinity,
+                        child: NeonButton(
+                          text: 'Save',
+                          color: AppColors.neonRed,
+                          filled: true,
+                          onPressed: _saveDetails,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
