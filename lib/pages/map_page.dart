@@ -9,6 +9,7 @@ import '../services/case_service.dart';
 import '../constants/app_theme.dart';
 import '../widgets/media_preview.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -64,6 +65,12 @@ class _MapPageState extends State<MapPage> {
               location['longitude'] as double,
             ),
             icon: BitmapDescriptor.defaultMarkerWithHue(_getMarkerHue(report.type)),
+            infoWindow: report.type == ReportType.sos 
+              ? InfoWindow(
+                  title: '🚨 EMERGENCY SOS 🚨',
+                  snippet: 'Activated: ${DateFormat('HH:mm:ss').format(report.timestamp)}',
+                )
+              : InfoWindow.noText,
             onTap: () => _onMarkerTapped(report),
           );
         }).toSet();
@@ -128,6 +135,8 @@ class _MapPageState extends State<MapPage> {
         return BitmapDescriptor.hueOrange;
       case ReportType.quickPin:
         return BitmapDescriptor.hueGreen;
+      case ReportType.sos:
+        return BitmapDescriptor.hueRed; // Use red for SOS
     }
   }
 
@@ -416,6 +425,8 @@ class _ReportDetailWindowState extends State<_ReportDetailWindow> with SingleTic
         return AppColors.neonAmber;
       case ReportType.quickPin:
         return AppColors.neonGreen;
+      case ReportType.sos:
+        return AppColors.neonRed;
     }
   }
 
@@ -566,6 +577,8 @@ class _ReportDetailWindowState extends State<_ReportDetailWindow> with SingleTic
         return Icons.report_problem;
       case ReportType.quickPin:
         return Icons.location_on;
+      case ReportType.sos:
+        return Icons.sos;
     }
   }
 
@@ -577,6 +590,8 @@ class _ReportDetailWindowState extends State<_ReportDetailWindow> with SingleTic
         return 'SERIOUS INCIDENT';
       case ReportType.quickPin:
         return 'QUICK PIN';
+      case ReportType.sos:
+        return 'EMERGENCY SOS';
     }
   }
 }
