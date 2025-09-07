@@ -6,6 +6,7 @@ import 'dart:async';
 import '../models/report_models.dart';
 import '../models/media_file.dart';
 import '../services/case_service.dart';
+import '../services/location_service.dart';
 import '../constants/app_theme.dart';
 import '../widgets/media_preview.dart';
 import 'package:flutter/services.dart';
@@ -507,15 +508,30 @@ class _ReportDetailWindowState extends State<_ReportDetailWindow> with SingleTic
                           content: widget.report.timestamp.toString(),
                           color: _themeColor,
                         ),
-                        const SizedBox(height: 16.0),
+                        const SizedBox(height: 12.0),
                         _DetailItem(
                           icon: Icons.location_on,
                           title: 'Location',
                           content: '${widget.report.location['latitude']}, ${widget.report.location['longitude']}',
                           color: _themeColor,
                         ),
+                        const SizedBox(height: 12.0),
+                        FutureBuilder<String>(
+                          future: LocationService.getLandmark(
+                            widget.report.location['latitude'] as double,
+                            widget.report.location['longitude'] as double,
+                          ),
+                          builder: (context, snapshot) {
+                            return _DetailItem(
+                              icon: Icons.place,
+                              title: 'Position',
+                              content: snapshot.data ?? 'Loading...',
+                              color: _themeColor,
+                            );
+                          },
+                        ),
                         if (widget.report.note != null) ...[
-                          const SizedBox(height: 16.0),
+                          const SizedBox(height: 12.0),
                           _DetailItem(
                             icon: Icons.description,
                             title: 'Description',
@@ -524,15 +540,28 @@ class _ReportDetailWindowState extends State<_ReportDetailWindow> with SingleTic
                           ),
                         ],
                         if (widget.report.mediaFiles != null && widget.report.mediaFiles!.isNotEmpty) ...[
-                          const SizedBox(height: 16.0),
-                          _DetailItem(
-                            icon: Icons.photo_library,
-                            title: 'Media',
-                            content: '',
-                            color: _themeColor,
-                          ),
-                          const SizedBox(height: 8.0),
-                          MediaGallery(
+                          const SizedBox(height: 12.0),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                Icons.photo_library,
+                                color: _themeColor.withOpacity(0.7),
+                                size: 16,
+                              ),
+                              const SizedBox(width: 8.0),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Media',
+                                      style: AppTextStyles.neonSubtitle(color: _themeColor).copyWith(
+                                        fontSize: 14.0,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8.0),
+                                    MediaGallery(
                             mediaFiles: widget.report.mediaFiles!
                                 .map((path) => MediaFile(
                                       id: path.split('/').last,
@@ -544,6 +573,11 @@ class _ReportDetailWindowState extends State<_ReportDetailWindow> with SingleTic
                                     ))
                                 .toList(),
                             maxItems: 4,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ],
