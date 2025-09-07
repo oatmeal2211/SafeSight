@@ -2,6 +2,10 @@
 
 A Flutter-based campus safety application with Life360-like features and a surveillance-cam inspired dark neon aesthetic.
 
+## Track and Problem Statement Tackled
+- Track: Campus Management
+- Problem Statement:
+  Campus Safety App - Current safety infrastructure often lacks comprehensive coverage, real-time responsiveness, and accessibility features that address the diverse needs of the campus community, leaving    gaps in protection and support.
 ## Features
 
 ### 🎨 Visual Theme
