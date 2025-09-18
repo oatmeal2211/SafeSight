@@ -5,6 +5,7 @@ import 'package:vibration/vibration.dart';
 import '../constants/app_theme.dart';
 import '../services/case_service.dart';
 import 'shared_widgets.dart';
+import 'location_info.dart';
 
 class ModeAmberConfirm extends StatelessWidget {
   final String caseId;
@@ -97,33 +98,7 @@ class ModeAmberConfirm extends StatelessWidget {
               ),
 
               // Location info
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: AppColors.neonRed.withOpacity(0.3),
-                      width: 1,
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.videocam,
-                        color: AppColors.neonRed.withOpacity(0.6),
-                        size: 16,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Near Library • 40.7306° N, 73.9352° W',
-                        style: AppTextStyles.cctvText(color: AppColors.neonRed),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              LocationInfo(color: AppColors.neonRed),
 
               // Content
               Expanded(
