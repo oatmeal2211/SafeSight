@@ -127,7 +127,7 @@ class ModeAmberConfirm extends StatelessWidget {
                       const SizedBox(height: 80),
                       SizedBox(
                         width: double.infinity,
-                        child: NeonButton(
+                        child: ReportNeonButton(
                           text: 'Send Amber Alert',
                           color: AppColors.neonRed,
                           filled: true,
@@ -138,7 +138,7 @@ class ModeAmberConfirm extends StatelessWidget {
                       const SizedBox(height: 24),
                       SizedBox(
                         width: double.infinity,
-                        child: NeonButton(
+                        child: ReportNeonButton(
                           text: 'Cancel',
                           color: AppColors.inactiveGray,
                           onPressed: () => Navigator.pop(context),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import '../constants/app_theme.dart' show AppColors, AppTextStyles, neonGlow, ScanlineBackground;
+import '../constants/app_theme.dart' hide NeonButton;
 import '../models/report_models.dart';
 import '../services/case_service.dart';
 import 'shared_widgets.dart';
@@ -218,7 +218,7 @@ class _ModeQuickPinState extends State<ModeQuickPin> {
                       // Submit button
                       SizedBox(
                         width: double.infinity,
-                        child: NeonButton(
+                        child: ReportNeonButton(
                           text: _isSubmitting ? 'Submitting...' : 'Submit',
                           color: AppColors.neonGreen,
                           filled: false,

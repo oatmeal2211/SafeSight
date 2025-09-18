@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../constants/app_theme.dart';
+import '../constants/app_theme.dart' hide NeonButton;
 import 'shared_widgets.dart';
 
 class WitnessSuccessPage extends StatelessWidget {
@@ -85,7 +85,7 @@ class WitnessSuccessPage extends StatelessWidget {
                 // Back to map button
                 SizedBox(
                   width: double.infinity,
-                  child: NeonButton(
+                  child: ReportNeonButton(
                     text: 'Back to Map',
                     color: AppColors.neonGreen,
                     filled: false,
