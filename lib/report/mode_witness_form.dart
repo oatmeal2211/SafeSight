@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
-import '../constants/app_theme.dart';
+import '../constants/app_theme.dart' hide NeonButton;
 import '../models/report_models.dart';
 import '../models/media_file.dart';
 import '../services/case_service.dart';
@@ -244,7 +244,7 @@ class _ModeWitnessFormState extends State<ModeWitnessForm> {
                       // Submit button
                       SizedBox(
                         width: double.infinity,
-                        child: NeonButton(
+                        child: ReportNeonButton(
                           text: _isSubmitting ? 'Submitting...' : 'Submit Report',
                           color: AppColors.neonAmber,
                           filled: true,

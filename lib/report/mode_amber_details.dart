@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
-import '../constants/app_theme.dart';
+import '../constants/app_theme.dart' hide NeonButton;
 import '../models/report_models.dart';
 import '../models/media_file.dart';
 import '../services/case_service.dart';
@@ -286,7 +286,7 @@ class _ModeAmberDetailsState extends State<ModeAmberDetails> {
                       // Save button
                       SizedBox(
                         width: double.infinity,
-                        child: NeonButton(
+                        child: ReportNeonButton(
                           text: 'Save',
                           color: AppColors.neonRed,
                           filled: true,
