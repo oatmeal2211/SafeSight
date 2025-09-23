@@ -220,8 +220,8 @@ class _MetaStripState extends State<MetaStrip> {
   }
 }
 
-// Updated NeonButton with improved typography
-class NeonButton extends StatelessWidget {
+// Updated ReportNeonButton with improved typography
+class ReportNeonButton extends StatelessWidget {
   final String text;
   final VoidCallback? onPressed;
   final Color color;
@@ -230,7 +230,7 @@ class NeonButton extends StatelessWidget {
   final double? height;
   final IconData? icon;
 
-  const NeonButton({
+  const ReportNeonButton({
     super.key,
     required this.text,
     this.onPressed,
@@ -542,7 +542,7 @@ class MediaRow extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: NeonButton(
+              child: ReportNeonButton(
                 text: 'Add Photo',
                 onPressed: onAddPhoto,
                 color: AppColors.neonBlue,
@@ -550,7 +550,7 @@ class MediaRow extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: NeonButton(
+              child: ReportNeonButton(
                 text: 'Add Video',
                 onPressed: onAddVideo,
                 color: AppColors.neonOrange,

@@ -13,6 +13,7 @@ import 'report/mode_witness_form.dart';
 import 'report/mode_quick_pin.dart';
 import 'report/witness_success_page.dart';
 import 'constants/app_theme.dart';
+import 'onboarding/welcome_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,7 +33,7 @@ class SafeSightApp extends StatelessWidget {
     return MaterialApp(
       title: 'SafeSight',
       theme: _buildTheme(),
-      home: const MainScaffold(),
+      home: const WelcomeScreen(),
       debugShowCheckedModeBanner: false,
     );
   }
