@@ -5,9 +5,12 @@ import 'package:vibration/vibration.dart';
 import '../constants/app_theme.dart';
 import '../services/case_service.dart';
 import 'shared_widgets.dart';
+import 'location_info.dart';
 
 class ModeAmberConfirm extends StatelessWidget {
-  const ModeAmberConfirm({Key? key}) : super(key: key);
+  final String caseId;
+
+  const ModeAmberConfirm({super.key, required this.caseId});
 
   Future<void> _sendAmberAlert(BuildContext context) async {
     // Haptic feedback and vibration
@@ -55,65 +58,98 @@ class ModeAmberConfirm extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(
-          'AMBER ALERT',
-          style: AppTextStyles.neonTitle(color: AppColors.neonRed),
-        ),
-        centerTitle: true,
-        backgroundColor: AppColors.background,
-        iconTheme: const IconThemeData(color: AppColors.neonRed),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            const MetaStrip(showRecording: true),
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const SizedBox(height: 40),
-                  Text(
-                    'Send\nAmber Alert?',
-                    textAlign: TextAlign.center,
-                    style: AppTextStyles.neonTitle(color: AppColors.neonRed).copyWith(
-                      fontSize: 48,
-                      height: 1.2,
+      body: ScanlineBackground(
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Header
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppColors.neonRed,
+                          width: 1,
+                        ),
+                      ),
+                      child: IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(
+                          Icons.chevron_left,
+                          color: AppColors.neonRed,
+                          size: 24,
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 32),
-                  Text(
-                    'This will notify security &\nnearby students.',
-                    textAlign: TextAlign.center,
-                    style: AppTextStyles.bodyText(
-                      color: AppColors.white.withValues(alpha: 0.8),
-                    ).copyWith(fontSize: 18),
-                  ),
-                  const SizedBox(height: 80),
-                  SizedBox(
-                    width: double.infinity,
-                    child: NeonButton(
-                      text: 'Send Amber Alert',
-                      color: AppColors.neonRed,
-                      filled: true,
-                      onPressed: () => _sendAmberAlert(context),
-                      icon: Icons.emergency,
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Text(
+                        'AMBER ALERT',
+                        style: AppTextStyles.neonTitle(color: AppColors.neonRed).copyWith(
+                          fontSize: 20,
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: NeonButton(
-                      text: 'Cancel',
-                      color: AppColors.inactiveGray,
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+
+              // Location info
+              LocationInfo(color: AppColors.neonRed),
+
+              // Content
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 40),
+                      Text(
+                        'Send\nAmber Alert?',
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.neonTitle(color: AppColors.neonRed).copyWith(
+                          fontSize: 48,
+                          height: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      Text(
+                        'This action is irreversible and will immediately notify campus security.',
+                        style: AppTextStyles.bodyText(
+                          color: AppColors.white.withOpacity(0.8),
+                        ).copyWith(fontSize: 16),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 80),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ReportNeonButton(
+                          text: 'Send Amber Alert',
+                          color: AppColors.neonRed,
+                          filled: true,
+                          onPressed: () => _sendAmberAlert(context),
+                          icon: Icons.emergency,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ReportNeonButton(
+                          text: 'Cancel',
+                          color: AppColors.inactiveGray,
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

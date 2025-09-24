@@ -69,7 +69,7 @@ class ReportHome extends StatelessWidget {
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       border: Border.all(
-                        color: AppColors.neonGreen.withValues(alpha: 0.3),
+                        color: AppColors.neonGreen.withOpacity(0.3),
                         width: 1,
                       ),
                       borderRadius: BorderRadius.circular(8),
@@ -78,7 +78,7 @@ class ReportHome extends StatelessWidget {
                       children: [
                         Icon(
                           Icons.security,
-                          color: AppColors.neonGreen.withValues(alpha: 0.6),
+                          color: AppColors.neonGreen.withOpacity(0.6),
                           size: 24,
                         ),
                         const SizedBox(height: 8),

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'dart:async' show Timer;
 import '../constants/app_theme.dart';
+import '../models/report_models.dart';
+import '../services/case_service.dart';
 
 // Data models for the prototype
 class TrustedContact {
@@ -45,6 +49,62 @@ class CirclePage extends StatefulWidget {
 }
 
 class _CirclePageState extends State<CirclePage> {
+  Timer? _reportsUpdateTimer;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _startReportsUpdates();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadRecentReports();
+  }
+
+  @override
+  void dispose() {
+    _reportsUpdateTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startReportsUpdates() {
+    // Initial load
+    _loadRecentReports();
+    
+    // Set up periodic updates every 30 seconds
+    _reportsUpdateTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => _loadRecentReports(),
+    );
+  }
+
+  Future<void> _loadRecentReports() async {
+    // Don't start another load if one is in progress
+    if (_isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final reports = await CaseService.getRecentCases(days: 7);
+      if (mounted) {
+        setState(() {
+          _recentReports = reports;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
   // Sample data for the prototype
   final List<TrustedContact> trustedContacts = [
     TrustedContact(name: 'Emma Johnson', status: 'Safe', statusColor: AppColors.neonGreen),
@@ -58,30 +118,7 @@ class _CirclePageState extends State<CirclePage> {
     CheckInHistory(time: '6:25 PM', date: 'Today'),
   ];
 
-  // Sample report data for the prototype
-  final List<ReportSummary> recentReports = [
-    ReportSummary(
-      type: 'Amber Alert',
-      description: 'Suspicious person near library',
-      time: '2 hours ago',
-      location: 'Main Library',
-      statusColor: AppColors.neonAmber,
-    ),
-    ReportSummary(
-      type: 'Quick Pin',
-      description: 'Broken lamp in parking lot',
-      time: '4 hours ago',
-      location: 'Lot B',
-      statusColor: AppColors.neonBlue,
-    ),
-    ReportSummary(
-      type: 'Witness Report',
-      description: 'Incident witnessed',
-      time: '1 day ago',
-      location: 'Student Center',
-      statusColor: AppColors.neonRed,
-    ),
-  ];
+  List<ReportCase> _recentReports = [];
 
   bool _isCheckingIn = false;
 
@@ -317,37 +354,128 @@ class _CirclePageState extends State<CirclePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Recent Reports',
-          style: AppTextStyles.neonSubtitle(color: AppColors.neonBlue),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Recent Reports',
+              style: AppTextStyles.neonSubtitle(color: AppColors.neonBlue),
+            ),
+            _isLoading
+              ? SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.neonBlue),
+                  ),
+                )
+              : IconButton(
+                  onPressed: () {
+                    HapticFeedback.mediumImpact();
+                    _loadRecentReports();
+                  },
+                  icon: Icon(
+                    Icons.refresh,
+                    color: AppColors.neonBlue,
+                    size: 20,
+                  ),
+                  splashRadius: 20,
+                ),
+          ],
         ),
         const SizedBox(height: 12),
         Container(
           constraints: const BoxConstraints(maxHeight: 200),
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: recentReports.length,
-            itemBuilder: (context, index) {
-              final report = recentReports[index];
-              return _buildReportCard(report);
-            },
-          ),
+          child: _isLoading
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.neonBlue),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Loading reports...',
+                      style: AppTextStyles.cctvText(color: AppColors.neonBlue),
+                    ),
+                  ],
+                ),
+              )
+            : _recentReports.isEmpty
+              ? Center(
+                  child: Text(
+                    'No recent reports',
+                    style: AppTextStyles.cctvText(color: AppColors.inactiveGray),
+                  ),
+                )
+              : ListView.builder(
+                shrinkWrap: true,
+                itemCount: _recentReports.length,
+                itemBuilder: (context, index) {
+                  final report = _recentReports[index];
+                  return _buildReportCard(report);
+                },
+              ),
         ),
       ],
     );
   }
 
-  Widget _buildReportCard(ReportSummary report) {
+  Widget _buildReportCard(ReportCase report) {
     IconData getReportIcon() {
       switch (report.type) {
-        case 'Amber Alert':
+        case ReportType.amber:
           return Icons.warning;
-        case 'Quick Pin':
+        case ReportType.quickPin:
           return Icons.push_pin;
-        case 'Witness Report':
+        case ReportType.witness:
           return Icons.visibility;
-        default:
-          return Icons.report;
+        case ReportType.sos:
+          return Icons.sos;
+      }
+    }
+
+    Color getStatusColor() {
+      switch (report.type) {
+        case ReportType.amber:
+          return AppColors.neonRed;
+        case ReportType.witness:
+          return AppColors.neonAmber;
+        case ReportType.quickPin:
+          return AppColors.neonGreen;
+        case ReportType.sos:
+          return AppColors.neonRed;
+      }
+    }
+
+    String getReportTitle() {
+      switch (report.type) {
+        case ReportType.amber:
+          return 'Amber Alert';
+        case ReportType.witness:
+          return 'Witness Report';
+        case ReportType.quickPin:
+          return 'Quick Pin';
+        case ReportType.sos:
+          return 'Emergency SOS';
+      }
+    }
+
+    String getTimeAgo() {
+      final difference = DateTime.now().difference(report.timestamp);
+      if (difference.inDays > 0) {
+        return '${difference.inDays} ${difference.inDays == 1 ? 'day' : 'days'} ago';
+      } else if (difference.inHours > 0) {
+        return '${difference.inHours} ${difference.inHours == 1 ? 'hour' : 'hours'} ago';
+      } else {
+        return '${difference.inMinutes} ${difference.inMinutes == 1 ? 'minute' : 'minutes'} ago';
       }
     }
 
@@ -369,15 +497,15 @@ class _CirclePageState extends State<CirclePage> {
             height: 40,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: report.statusColor.withValues(alpha: 0.2),
+              color: getStatusColor().withOpacity(0.2),
               border: Border.all(
-                color: report.statusColor,
+                color: getStatusColor(),
                 width: 1.5,
               ),
             ),
             child: Icon(
               getReportIcon(),
-              color: report.statusColor,
+              color: getStatusColor(),
               size: 20,
             ),
           ),
@@ -393,19 +521,21 @@ class _CirclePageState extends State<CirclePage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      report.type,
-                      style: AppTextStyles.bodyText(color: report.statusColor),
+                      getReportTitle(),
+                      style: AppTextStyles.bodyText(color: getStatusColor()),
                     ),
                     Text(
-                      report.time,
+                      getTimeAgo(),
                       style: AppTextStyles.cctvText(color: AppColors.inactiveGray),
                     ),
                   ],
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  report.description,
+                if (report.note != null) Text(
+                  report.note!,
                   style: AppTextStyles.cctvText(color: AppColors.inactiveGray),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
                 Row(
@@ -417,7 +547,7 @@ class _CirclePageState extends State<CirclePage> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      report.location,
+                      '${report.location['latitude']}, ${report.location['longitude']}',
                       style: AppTextStyles.cctvText(color: AppColors.inactiveGray),
                     ),
                   ],

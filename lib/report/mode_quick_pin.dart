@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import '../constants/app_theme.dart';
+import '../constants/app_theme.dart' hide NeonButton;
 import '../models/report_models.dart';
 import '../services/case_service.dart';
 import 'shared_widgets.dart';
+import 'location_info.dart';
 
 class ModeQuickPin extends StatefulWidget {
-  const ModeQuickPin({Key? key}) : super(key: key);
+  const ModeQuickPin({super.key});
 
   @override
   State<ModeQuickPin> createState() => _ModeQuickPinState();
@@ -118,16 +119,16 @@ class _ModeQuickPinState extends State<ModeQuickPin> {
 
   IconData _getCategoryIcon(QuickReportCategory category) {
     switch (category) {
-      case QuickReportCategory.brokenLamp:
+      case QuickReportCategory.hazard:
+        return Icons.warning_amber_rounded;
+      case QuickReportCategory.brokenLight:
         return Icons.lightbulb_outline;
-      case QuickReportCategory.darkCorridor:
-        return Icons.visibility_off;
-      case QuickReportCategory.creepyPerson:
-        return Icons.person_outline;
-      case QuickReportCategory.noise:
-        return Icons.volume_up;
+      case QuickReportCategory.suspiciousVehicle:
+        return Icons.directions_car_filled_outlined;
+      case QuickReportCategory.unsafeArea:
+        return Icons.location_off_outlined;
       case QuickReportCategory.other:
-        return Icons.more_horiz;
+        return Icons.help_outline;
     }
   }
 
@@ -163,37 +164,19 @@ class _ModeQuickPinState extends State<ModeQuickPin> {
                     ),
                     const SizedBox(width: 16),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(
-                            Icons.videocam,
-                            color: AppColors.neonGreen.withOpacity(0.6),
-                            size: 16,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Near Library\n40.7306° N, 73.9352° W',
-                            style: AppTextStyles.cctvText(),
-                          ),
-                        ],
+                      child: Text(
+                        'QUICK PIN REPORT',
+                        style: AppTextStyles.neonTitle(color: AppColors.neonGreen).copyWith(
+                          fontSize: 20,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
 
-              // Title
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'REPORT ISSUE',
-                    style: AppTextStyles.neonTitle().copyWith(fontSize: 32),
-                  ),
-                ),
-              ),
+              // Location info
+              LocationInfo(color: AppColors.neonGreen),
 
               const SizedBox(height: 32),
 
@@ -235,7 +218,7 @@ class _ModeQuickPinState extends State<ModeQuickPin> {
                       // Submit button
                       SizedBox(
                         width: double.infinity,
-                        child: NeonButton(
+                        child: ReportNeonButton(
                           text: _isSubmitting ? 'Submitting...' : 'Submit',
                           color: AppColors.neonGreen,
                           filled: false,

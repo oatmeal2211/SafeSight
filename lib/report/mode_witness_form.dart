@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
-import '../constants/app_theme.dart';
+import '../constants/app_theme.dart' hide NeonButton;
 import '../models/report_models.dart';
+import '../models/media_file.dart';
 import '../services/case_service.dart';
+import '../services/media_service.dart';
 import 'shared_widgets.dart';
+import 'location_info.dart';
 
 class ModeWitnessForm extends StatefulWidget {
-  const ModeWitnessForm({Key? key}) : super(key: key);
+  const ModeWitnessForm({super.key});
 
   @override
   State<ModeWitnessForm> createState() => _ModeWitnessFormState();
@@ -20,15 +23,16 @@ class _ModeWitnessFormState extends State<ModeWitnessForm> {
   
   IncidentCategory? _selectedCategory;
   PrivacyMode _privacyMode = PrivacyMode.anonymous;
-  List<String> _mediaFiles = [];
+  final List<MediaFile> _mediaFiles = [];
   bool _isSubmitting = false;
 
   Future<void> _pickPhoto() async {
     try {
       final XFile? image = await _picker.pickImage(source: ImageSource.camera);
       if (image != null) {
+        final mediaFile = await MediaService.saveMedia(image.path);
         setState(() {
-          _mediaFiles.add(image.path);
+          _mediaFiles.add(mediaFile);
         });
         Fluttertoast.showToast(
           msg: "Photo captured",
@@ -49,8 +53,9 @@ class _ModeWitnessFormState extends State<ModeWitnessForm> {
     try {
       final XFile? video = await _picker.pickVideo(source: ImageSource.camera);
       if (video != null) {
+        final mediaFile = await MediaService.saveMedia(video.path);
         setState(() {
-          _mediaFiles.add(video.path);
+          _mediaFiles.add(mediaFile);
         });
         Fluttertoast.showToast(
           msg: "Video recorded",
@@ -90,7 +95,7 @@ class _ModeWitnessFormState extends State<ModeWitnessForm> {
             ? null 
             : _descriptionController.text.trim(),
         privacyMode: _privacyMode,
-        mediaFiles: _mediaFiles,
+        mediaFiles: _mediaFiles.map((m) => m.filePath).toList(),
       );
 
       Fluttertoast.showToast(
@@ -136,7 +141,7 @@ class _ModeWitnessFormState extends State<ModeWitnessForm> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: AppColors.neonRed,
+                          color: AppColors.neonAmber,
                           width: 1,
                         ),
                       ),
@@ -144,7 +149,7 @@ class _ModeWitnessFormState extends State<ModeWitnessForm> {
                         onPressed: () => Navigator.pop(context),
                         icon: const Icon(
                           Icons.chevron_left,
-                          color: AppColors.neonRed,
+                          color: AppColors.neonAmber,
                           size: 24,
                         ),
                       ),
@@ -153,7 +158,7 @@ class _ModeWitnessFormState extends State<ModeWitnessForm> {
                     Expanded(
                       child: Text(
                         'SERIOUS INCIDENT REPORT',
-                        style: AppTextStyles.neonTitle(color: AppColors.neonRed).copyWith(
+                        style: AppTextStyles.neonTitle(color: AppColors.neonAmber).copyWith(
                           fontSize: 20,
                         ),
                       ),
@@ -161,6 +166,9 @@ class _ModeWitnessFormState extends State<ModeWitnessForm> {
                   ],
                 ),
               ),
+
+              // Location info
+              LocationInfo(color: AppColors.neonAmber),
 
               // Content
               Expanded(
@@ -172,7 +180,7 @@ class _ModeWitnessFormState extends State<ModeWitnessForm> {
                       NeonDropdown<IncidentCategory>(
                         label: 'Category *',
                         value: _selectedCategory,
-                        color: AppColors.neonRed,
+                        color: AppColors.neonAmber,
                         items: IncidentCategory.values,
                         itemToString: (category) => category.displayName,
                         onChanged: (value) {
@@ -190,7 +198,7 @@ class _ModeWitnessFormState extends State<ModeWitnessForm> {
                         hint: 'Add details (clothing, vehicle plate, direction, etc.)',
                         controller: _descriptionController,
                         maxLines: 4,
-                        color: AppColors.neonRed,
+                        color: AppColors.neonAmber,
                       ),
 
                       const SizedBox(height: 24),
@@ -207,7 +215,7 @@ class _ModeWitnessFormState extends State<ModeWitnessForm> {
                       // Privacy mode
                       Text(
                         'Privacy Mode',
-                        style: AppTextStyles.bodyText(color: AppColors.neonRed),
+                        style: AppTextStyles.bodyText(color: AppColors.neonAmber),
                       ),
                       const SizedBox(height: 8),
                       NeonSegmented<PrivacyMode>(
@@ -218,7 +226,7 @@ class _ModeWitnessFormState extends State<ModeWitnessForm> {
                             case PrivacyMode.anonymous:
                               return 'Anonymous';
                             case PrivacyMode.pseudonymous:
-                              return 'Pseudonymous';
+                              return 'Pseudo';
                             case PrivacyMode.identified:
                               return 'Identified';
                           }
@@ -228,7 +236,7 @@ class _ModeWitnessFormState extends State<ModeWitnessForm> {
                             _privacyMode = value;
                           });
                         },
-                        color: AppColors.neonRed,
+                        color: AppColors.neonAmber,
                       ),
 
                       const SizedBox(height: 40),
@@ -236,9 +244,9 @@ class _ModeWitnessFormState extends State<ModeWitnessForm> {
                       // Submit button
                       SizedBox(
                         width: double.infinity,
-                        child: NeonButton(
+                        child: ReportNeonButton(
                           text: _isSubmitting ? 'Submitting...' : 'Submit Report',
-                          color: AppColors.neonRed,
+                          color: AppColors.neonAmber,
                           filled: true,
                           onPressed: _isSubmitting ? null : _submitReport,
                         ),

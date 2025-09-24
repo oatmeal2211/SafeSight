@@ -1,10 +1,14 @@
 import 'dart:async';
-import 'dart:math';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:intl/intl.dart';
-import '../constants/app_theme.dart';
+import '../constants/app_theme.dart' show AppColors, AppTextStyles, neonGlow;
+import '../models/media_file.dart';
+import '../widgets/media_preview.dart';
+import '../services/location_service.dart';
 
 // MetaStrip - Unified details UI for all report screens
 class MetaStrip extends StatefulWidget {
@@ -28,7 +32,6 @@ class _MetaStripState extends State<MetaStrip> {
   String _accuracy = '—';
   String _landmark = 'Near Student Center';
   bool _recBlinking = true;
-  bool _locationPermissionGranted = false;
 
   @override
   void initState() {
@@ -55,7 +58,7 @@ class _MetaStripState extends State<MetaStrip> {
 
   void _updateTime() {
     final now = DateTime.now();
-    final formatter = DateFormat('yyyy-MM-dd HH:mm:ss.SSS');
+    final formatter = DateFormat('yyyy-MM-dd HH:mm:ss');
     setState(() {
       _currentTime = formatter.format(now);
     });
@@ -72,9 +75,6 @@ class _MetaStripState extends State<MetaStrip> {
   Future<void> _requestLocationPermission() async {
     final status = await Permission.location.request();
     if (status.isGranted) {
-      setState(() {
-        _locationPermissionGranted = true;
-      });
       _startLocationUpdates();
     } else {
       if (mounted) {
@@ -88,7 +88,7 @@ class _MetaStripState extends State<MetaStrip> {
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
-              side: BorderSide(color: AppColors.neonRed.withValues(alpha: 0.3)),
+              side: BorderSide(color: AppColors.neonRed.withOpacity(0.3)),
             ),
           ),
         );
@@ -103,12 +103,17 @@ class _MetaStripState extends State<MetaStrip> {
         distanceFilter: 1,
       ),
     ).listen(
-      (Position position) {
+      (Position position) async {
         setState(() {
           _coordinates = '${position.latitude.toStringAsFixed(5)}, ${position.longitude.toStringAsFixed(5)}';
           _accuracy = '${position.accuracy.round()}m';
-          _landmark = _generateLandmark(position);
         });
+        final landmark = await _generateLandmark(position);
+        if (mounted) {
+          setState(() {
+            _landmark = landmark;
+          });
+        }
       },
       onError: (error) {
         setState(() {
@@ -119,22 +124,8 @@ class _MetaStripState extends State<MetaStrip> {
     );
   }
 
-  String _generateLandmark(Position position) {
-    // Mock landmark generation based on coordinates
-    final buildings = [
-      'Student Center',
-      'Engineering Hall',
-      'Library Building',
-      'Science Complex',
-      'Arts Building',
-      'Administration Building',
-      'Gymnasium',
-      'Dining Hall',
-      'Dormitory Block A',
-      'Parking Structure'
-    ];
-    final random = Random(position.latitude.hashCode + position.longitude.hashCode);
-    return 'Near ${buildings[random.nextInt(buildings.length)]}';
+  Future<String> _generateLandmark(Position position) async {
+    return LocationService.getLandmark(position.latitude, position.longitude);
   }
 
   @override
@@ -144,7 +135,7 @@ class _MetaStripState extends State<MetaStrip> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         border: Border.all(
-          color: AppColors.neonGreen.withValues(alpha: 0.2),
+          color: AppColors.neonGreen.withOpacity(0.2),
           width: 1,
         ),
         borderRadius: BorderRadius.circular(8),
@@ -195,7 +186,7 @@ class _MetaStripState extends State<MetaStrip> {
         gradient: LinearGradient(
           colors: [
             Colors.transparent,
-            AppColors.neonGreen.withValues(alpha: 0.2),
+            AppColors.neonGreen.withOpacity(0.2),
             Colors.transparent,
           ],
         ),
@@ -229,8 +220,8 @@ class _MetaStripState extends State<MetaStrip> {
   }
 }
 
-// Updated NeonButton with improved typography
-class NeonButton extends StatelessWidget {
+// Updated ReportNeonButton with improved typography
+class ReportNeonButton extends StatelessWidget {
   final String text;
   final VoidCallback? onPressed;
   final Color color;
@@ -239,7 +230,7 @@ class NeonButton extends StatelessWidget {
   final double? height;
   final IconData? icon;
 
-  const NeonButton({
+  const ReportNeonButton({
     super.key,
     required this.text,
     this.onPressed,
@@ -261,7 +252,7 @@ class NeonButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.3),
+            color: color.withOpacity(0.3),
             blurRadius: 12,
             spreadRadius: 1,
           ),
@@ -323,11 +314,11 @@ class NeonTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+        border: Border.all(color: color.withOpacity(0.3), width: 1),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.1),
+            color: color.withOpacity(0.1),
             blurRadius: 8,
             spreadRadius: 1,
           ),
@@ -368,7 +359,7 @@ class NeonTile extends StatelessWidget {
                 ),
                 Icon(
                   Icons.arrow_forward_ios,
-                  color: color.withValues(alpha: 0.6),
+                  color: color.withOpacity(0.6),
                   size: 16,
                 ),
               ],
@@ -403,7 +394,7 @@ class NeonDropdown<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+        border: Border.all(color: color.withOpacity(0.3), width: 1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: DropdownButtonFormField<T>(
@@ -450,7 +441,7 @@ class NeonSegmented<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+        border: Border.all(color: color.withOpacity(0.3), width: 1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -462,7 +453,7 @@ class NeonSegmented<T> extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 decoration: BoxDecoration(
-                  color: isSelected ? color.withValues(alpha: 0.2) : Colors.transparent,
+                  color: isSelected ? color.withOpacity(0.2) : Colors.transparent,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Center(
@@ -507,7 +498,7 @@ class NeonTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+        border: Border.all(color: color.withOpacity(0.3), width: 1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: TextField(
@@ -530,7 +521,7 @@ class NeonTextField extends StatelessWidget {
 
 // Media picker row widget
 class MediaRow extends StatelessWidget {
-  final List<String> mediaFiles;
+  final List<MediaFile> mediaFiles;
   final VoidCallback? onAddPhoto;
   final VoidCallback? onAddVideo;
   final Function(int)? onRemove;
@@ -551,7 +542,7 @@ class MediaRow extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: NeonButton(
+              child: ReportNeonButton(
                 text: 'Add Photo',
                 onPressed: onAddPhoto,
                 color: AppColors.neonBlue,
@@ -559,7 +550,7 @@ class MediaRow extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: NeonButton(
+              child: ReportNeonButton(
                 text: 'Add Video',
                 onPressed: onAddVideo,
                 color: AppColors.neonOrange,
@@ -573,21 +564,36 @@ class MediaRow extends StatelessWidget {
             margin: const EdgeInsets.only(bottom: 8),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              border: Border.all(color: AppColors.neonGreen.withValues(alpha: 0.3)),
+              border: Border.all(color: AppColors.neonGreen.withOpacity(0.3)),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               children: [
-                Icon(
-                  entry.value.contains('video') ? Icons.videocam : Icons.photo,
-                  color: AppColors.neonGreen,
-                  size: 20,
+                SizedBox(
+                  width: 60,
+                  height: 60,
+                  child: MediaPreview(
+                    media: entry.value,
+                    showPlayIcon: false,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
-                    entry.value,
-                    style: AppTextStyles.bodyText(color: AppColors.white),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        entry.value.isVideo ? 'Video' : 'Photo',
+                        style: AppTextStyles.neonSubtitle(
+                          color: entry.value.isVideo ? AppColors.neonOrange : AppColors.neonBlue,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Captured ${DateFormat('MMM d, HH:mm').format(entry.value.timestamp)}',
+                        style: AppTextStyles.bodyText(color: AppColors.inactiveGray),
+                      ),
+                    ],
                   ),
                 ),
                 IconButton(
